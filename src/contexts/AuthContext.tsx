@@ -1,196 +1,323 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export type UserRole = 'owner' | 'admin' | 'employee';
 
-export interface User {
+export interface Profile {
   id: string;
+  user_id: string;
+  name: string;
+  username: string;
+  phone?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClockRecord {
+  id: string;
+  user_id: string;
+  clock_in: string;
+  clock_out?: string;
+  duration?: number;
+  date: string;
+}
+
+interface StaffMember {
+  user_id: string;
   name: string;
   username: string;
   phone?: string;
   role: UserRole;
   clockedIn?: boolean;
-  clockInTime?: string;
-}
-
-export interface ClockRecord {
-  id: string;
-  userId: string;
-  clockIn: string;
-  clockOut?: string;
-  duration?: number; // in minutes
-  date: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  users: User[];
-  clockRecords: ClockRecord[];
+  session: Session | null;
+  profile: Profile | null;
+  role: UserRole | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  addUser: (userData: Omit<User, 'id'> & { password: string }) => void;
-  updateUser: (id: string, userData: Partial<User>) => void;
-  deleteUser: (id: string) => void;
-  clockIn: () => void;
-  clockOut: () => void;
-  getUserClockRecords: (userId: string) => ClockRecord[];
-  getTodayHours: (userId: string) => number;
+  isLoading: boolean;
+  staff: StaffMember[];
+  clockRecords: ClockRecord[];
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  fetchStaff: () => Promise<void>;
+  fetchClockRecords: () => Promise<void>;
+  clockIn: () => Promise<void>;
+  clockOut: () => Promise<void>;
+  isClockedIn: boolean;
+  todayHours: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// User credentials stored separately for security
-const userCredentials: Record<string, string> = {
-  owner: 'owner123',
-  admin: '123',
-  employee1: 'emp123',
-};
-
-const initialUsers: User[] = [
-  {
-    id: '1',
-    name: 'Owner',
-    username: 'owner',
-    phone: '555-0100',
-    role: 'owner',
-  },
-  {
-    id: '2',
-    name: 'Administrator',
-    username: 'admin',
-    phone: '555-0101',
-    role: 'admin',
-  },
-  {
-    id: '3',
-    name: 'John Driver',
-    username: 'employee1',
-    phone: '555-0102',
-    role: 'employee',
-  },
-];
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [credentials, setCredentials] = useState<Record<string, string>>(userCredentials);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [clockRecords, setClockRecords] = useState<ClockRecord[]>([]);
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [todayHours, setTodayHours] = useState(0);
 
-  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Defer Supabase calls
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+            fetchUserRole(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+          setRole(null);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+        fetchUserRole(session.user.id);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return;
+    }
+
+    setProfile(data);
+  };
+
+  const fetchUserRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching role:', error);
+      return;
+    }
+
+    setRole(data?.role as UserRole || null);
     
-    const foundUser = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    // Fetch staff and clock records after role is known
+    if (data?.role === 'owner' || data?.role === 'admin') {
+      fetchStaff();
+      fetchClockRecords();
+    } else if (data?.role === 'employee') {
+      fetchUserClockRecords(userId);
+    }
+  };
+
+  const fetchStaff = async () => {
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (profilesError) {
+      console.error('Error fetching staff profiles:', profilesError);
+      return;
+    }
+
+    const { data: roles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('*');
+
+    if (rolesError) {
+      console.error('Error fetching staff roles:', rolesError);
+      return;
+    }
+
+    // Check who's clocked in
+    const today = new Date().toISOString().split('T')[0];
+    const { data: todayRecords } = await supabase
+      .from('clock_records')
+      .select('user_id')
+      .eq('date', today)
+      .is('clock_out', null);
+
+    const clockedInUsers = new Set(todayRecords?.map(r => r.user_id) || []);
+
+    const staffMembers: StaffMember[] = profiles?.map(p => {
+      const userRole = roles?.find(r => r.user_id === p.user_id);
+      return {
+        user_id: p.user_id,
+        name: p.name,
+        username: p.username,
+        phone: p.phone || undefined,
+        role: (userRole?.role as UserRole) || 'employee',
+        clockedIn: clockedInUsers.has(p.user_id),
+      };
+    }) || [];
+
+    setStaff(staffMembers);
+  };
+
+  const fetchClockRecords = async () => {
+    const { data, error } = await supabase
+      .from('clock_records')
+      .select('*')
+      .order('clock_in', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error('Error fetching clock records:', error);
+      return;
+    }
+
+    setClockRecords(data || []);
+  };
+
+  const fetchUserClockRecords = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('clock_records')
+      .select('*')
+      .eq('user_id', userId)
+      .order('clock_in', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching user clock records:', error);
+      return;
+    }
+
+    setClockRecords(data || []);
+
+    // Check if clocked in
+    const today = new Date().toISOString().split('T')[0];
+    const openRecord = data?.find(r => r.date === today && !r.clock_out);
+    setIsClockedIn(!!openRecord);
+
+    // Calculate today's hours
+    const todayRecords = data?.filter(r => r.date === today) || [];
+    const totalMinutes = todayRecords.reduce((acc, r) => acc + (r.duration || 0), 0);
+    setTodayHours(totalMinutes / 60);
+  };
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     
-    if (!foundUser) {
-      return { success: false, error: 'User not found' };
+    if (error) {
+      return { success: false, error: error.message };
     }
     
-    const storedPassword = credentials[foundUser.username.toLowerCase()];
-    
-    if (storedPassword !== password) {
-      return { success: false, error: 'Invalid password' };
-    }
-    
-    setUser(foundUser);
     return { success: true };
   };
 
-  const logout = () => {
-    // Auto clock out if clocked in
-    if (user?.clockedIn) {
-      clockOut();
+  const logout = async () => {
+    // Clock out if clocked in
+    if (isClockedIn && user) {
+      await clockOut();
     }
-    setUser(null);
+    await supabase.auth.signOut();
+    setProfile(null);
+    setRole(null);
+    setStaff([]);
+    setClockRecords([]);
   };
 
-  const addUser = (userData: Omit<User, 'id'> & { password: string }) => {
-    const { password, ...userInfo } = userData;
-    const newUser: User = {
-      ...userInfo,
-      id: crypto.randomUUID(),
-    };
-    setUsers(prev => [...prev, newUser]);
-    setCredentials(prev => ({ ...prev, [userData.username.toLowerCase()]: password }));
-  };
+  const clockIn = async () => {
+    if (!user) return;
 
-  const updateUser = (id: string, userData: Partial<User>) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...userData } : u));
-    if (user?.id === id) {
-      setUser(prev => prev ? { ...prev, ...userData } : null);
-    }
-  };
-
-  const deleteUser = (id: string) => {
-    const userToDelete = users.find(u => u.id === id);
-    if (userToDelete) {
-      setUsers(prev => prev.filter(u => u.id !== id));
-      setCredentials(prev => {
-        const newCreds = { ...prev };
-        delete newCreds[userToDelete.username.toLowerCase()];
-        return newCreds;
+    const { error } = await supabase
+      .from('clock_records')
+      .insert({
+        user_id: user.id,
+        clock_in: new Date().toISOString(),
+        date: new Date().toISOString().split('T')[0],
       });
+
+    if (error) {
+      console.error('Clock in error:', error);
+      return;
     }
+
+    setIsClockedIn(true);
+    fetchUserClockRecords(user.id);
   };
 
-  const clockIn = () => {
-    if (!user || user.clockedIn) return;
-    
-    const now = new Date().toISOString();
+  const clockOut = async () => {
+    if (!user) return;
+
     const today = new Date().toISOString().split('T')[0];
     
-    const newRecord: ClockRecord = {
-      id: crypto.randomUUID(),
-      userId: user.id,
-      clockIn: now,
-      date: today,
-    };
-    
-    setClockRecords(prev => [...prev, newRecord]);
-    updateUser(user.id, { clockedIn: true, clockInTime: now });
-  };
+    // Find the open record
+    const { data: openRecord } = await supabase
+      .from('clock_records')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('date', today)
+      .is('clock_out', null)
+      .maybeSingle();
 
-  const clockOut = () => {
-    if (!user || !user.clockedIn) return;
-    
+    if (!openRecord) return;
+
     const now = new Date();
-    const clockInTime = new Date(user.clockInTime!);
-    const duration = Math.round((now.getTime() - clockInTime.getTime()) / 60000); // minutes
-    
-    setClockRecords(prev => prev.map(r => {
-      if (r.userId === user.id && !r.clockOut) {
-        return { ...r, clockOut: now.toISOString(), duration };
-      }
-      return r;
-    }));
-    
-    updateUser(user.id, { clockedIn: false, clockInTime: undefined });
-  };
+    const clockInTime = new Date(openRecord.clock_in);
+    const duration = Math.round((now.getTime() - clockInTime.getTime()) / 60000);
 
-  const getUserClockRecords = (userId: string) => {
-    return clockRecords.filter(r => r.userId === userId);
-  };
+    const { error } = await supabase
+      .from('clock_records')
+      .update({
+        clock_out: now.toISOString(),
+        duration,
+      })
+      .eq('id', openRecord.id);
 
-  const getTodayHours = (userId: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    const todayRecords = clockRecords.filter(r => r.userId === userId && r.date === today);
-    return todayRecords.reduce((acc, r) => acc + (r.duration || 0), 0) / 60;
+    if (error) {
+      console.error('Clock out error:', error);
+      return;
+    }
+
+    setIsClockedIn(false);
+    fetchUserClockRecords(user.id);
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      users,
+    <AuthContext.Provider value={{
+      user,
+      session,
+      profile,
+      role,
+      isAuthenticated: !!user,
+      isLoading,
+      staff,
       clockRecords,
-      isAuthenticated: !!user, 
-      login, 
+      login,
       logout,
-      addUser,
-      updateUser,
-      deleteUser,
+      fetchStaff,
+      fetchClockRecords,
       clockIn,
       clockOut,
-      getUserClockRecords,
-      getTodayHours,
+      isClockedIn,
+      todayHours,
     }}>
       {children}
     </AuthContext.Provider>

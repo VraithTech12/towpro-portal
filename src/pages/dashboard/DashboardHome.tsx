@@ -6,19 +6,22 @@ import { Plus, FileText, Truck, Wrench, ArrowRight, Clock, PlayCircle, StopCircl
 import { formatDistanceToNow } from 'date-fns';
 
 const DashboardHome = () => {
-  const { user, clockIn, clockOut, getTodayHours, users } = useAuth();
+  const { profile, role, staff, clockIn, clockOut, isClockedIn, todayHours, clockRecords, user } = useAuth();
   const { reports, towUnits } = useData();
 
-  const userReports = user?.role === 'employee' 
+  const userReports = role === 'employee' 
     ? reports.filter(r => r.assignedTo === user?.id)
     : reports;
 
   const openReports = userReports.filter(r => r.status === 'open' || r.status === 'in-progress').length;
   const availableUnits = towUnits.filter(u => u.status === 'available').length;
-  const todayHours = user ? getTodayHours(user.id) : 0;
-  const employeeCount = users.filter(u => u.role === 'employee').length;
+  const employeeCount = staff.filter(s => s.role === 'employee').length;
 
-  const isOwnerOrAdmin = user?.role === 'owner' || user?.role === 'admin';
+  const isOwnerOrAdmin = role === 'owner' || role === 'admin';
+
+  // Find current clock in time from clock records
+  const today = new Date().toISOString().split('T')[0];
+  const currentClockRecord = clockRecords.find(r => r.date === today && !r.clock_out);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -26,23 +29,23 @@ const DashboardHome = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Welcome, {user?.name?.split(' ')[0]}
+            Welcome, {profile?.name?.split(' ')[0] || 'User'}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {user?.role === 'owner' ? 'Full owner access' : 
-             user?.role === 'admin' ? 'Administrator access' : 
+            {role === 'owner' ? 'Full owner access' : 
+             role === 'admin' ? 'Administrator access' : 
              'Employee dashboard'}
           </p>
         </div>
         <div className="flex items-center gap-3">
           {/* Clock In/Out Button for Employees */}
-          {user?.role === 'employee' && (
+          {role === 'employee' && (
             <Button 
-              variant={user.clockedIn ? "destructive" : "default"}
-              onClick={user.clockedIn ? clockOut : clockIn}
+              variant={isClockedIn ? "destructive" : "default"}
+              onClick={isClockedIn ? clockOut : clockIn}
               className="gap-2"
             >
-              {user.clockedIn ? (
+              {isClockedIn ? (
                 <>
                   <StopCircle className="w-4 h-4" />
                   Clock Out
@@ -65,18 +68,18 @@ const DashboardHome = () => {
       </div>
 
       {/* Clock Status for Employees */}
-      {user?.role === 'employee' && (
-        <div className={`p-4 rounded-xl border ${user.clockedIn ? 'bg-success/10 border-success/30' : 'bg-card border-border'}`}>
+      {role === 'employee' && (
+        <div className={`p-4 rounded-xl border ${isClockedIn ? 'bg-success/10 border-success/30' : 'bg-card border-border'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Clock className={`w-5 h-5 ${user.clockedIn ? 'text-success' : 'text-muted-foreground'}`} />
+              <Clock className={`w-5 h-5 ${isClockedIn ? 'text-success' : 'text-muted-foreground'}`} />
               <div>
                 <p className="font-medium text-foreground">
-                  {user.clockedIn ? 'Currently Clocked In' : 'Not Clocked In'}
+                  {isClockedIn ? 'Currently Clocked In' : 'Not Clocked In'}
                 </p>
-                {user.clockedIn && user.clockInTime && (
+                {isClockedIn && currentClockRecord && (
                   <p className="text-sm text-muted-foreground">
-                    Started {formatDistanceToNow(new Date(user.clockInTime), { addSuffix: true })}
+                    Started {formatDistanceToNow(new Date(currentClockRecord.clock_in), { addSuffix: true })}
                   </p>
                 )}
               </div>

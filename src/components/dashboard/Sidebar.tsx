@@ -14,7 +14,7 @@ import {
 import apexLogo from '@/assets/apex-logo.png';
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const { profile, role, logout } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -61,7 +61,7 @@ const Sidebar = () => {
           </Link>
         ))}
 
-        {(user?.role === 'admin' || user?.role === 'owner') && (
+        {(role === 'admin' || role === 'owner') && (
           <>
             <div className="w-6 h-px bg-border my-2 mx-auto" />
             {adminItems.map((item) => (
@@ -87,7 +87,7 @@ const Sidebar = () => {
       {/* User Section */}
       <div className="flex flex-col items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-foreground font-medium text-xs">
-          {user?.name?.charAt(0) || 'U'}
+          {profile?.name?.charAt(0) || 'U'}
         </div>
         <button
           onClick={logout}

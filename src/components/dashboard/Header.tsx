@@ -3,7 +3,7 @@ import { Bell, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const Header = () => {
-  const { user } = useAuth();
+  const { profile, role } = useAuth();
 
   return (
     <header className="h-14 bg-card border-b border-border flex items-center justify-between px-6">
@@ -26,11 +26,11 @@ const Header = () => {
 
         <div className="flex items-center gap-2">
           <div className="text-right">
-            <p className="text-sm font-medium text-foreground">{user?.name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+            <p className="text-sm font-medium text-foreground">{profile?.name || 'User'}</p>
+            <p className="text-xs text-muted-foreground capitalize">{role || 'Staff'}</p>
           </div>
           <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <span className="text-primary font-medium text-sm">{user?.name?.charAt(0)}</span>
+            <span className="text-primary font-medium text-sm">{profile?.name?.charAt(0) || 'U'}</span>
           </div>
         </div>
       </div>
