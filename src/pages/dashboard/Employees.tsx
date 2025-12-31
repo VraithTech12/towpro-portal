@@ -40,6 +40,8 @@ const Employees = () => {
   const [editFormData, setEditFormData] = useState({
     name: '',
     phone: '',
+    email: '',
+    password: '',
   });
 
   // Owner or admin only page
@@ -104,6 +106,8 @@ const Employees = () => {
     setEditFormData({
       name: member.name,
       phone: member.phone || '',
+      email: '',
+      password: '',
     });
     setIsEditOpen(true);
   };
@@ -114,15 +118,32 @@ const Employees = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: editFormData.name,
-          phone: editFormData.phone || null,
-        })
-        .eq('user_id', editingStaff.user_id);
+      const updatePayload: {
+        userId: string;
+        name: string;
+        phone: string;
+        email?: string;
+        password?: string;
+      } = {
+        userId: editingStaff.user_id,
+        name: editFormData.name,
+        phone: editFormData.phone,
+      };
+
+      // Only include email/password if they were changed
+      if (editFormData.email.trim()) {
+        updatePayload.email = editFormData.email.trim();
+      }
+      if (editFormData.password.trim()) {
+        updatePayload.password = editFormData.password.trim();
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-staff', {
+        body: updatePayload,
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast.success('Staff member updated');
       setIsEditOpen(false);
@@ -404,6 +425,32 @@ const Employees = () => {
                 onChange={(e) => handleEditInputChange('phone', e.target.value)}
                 placeholder="(555) 123-4567"
               />
+            </div>
+            <div className="border-t border-border pt-4 mt-4">
+              <p className="text-sm text-muted-foreground mb-3">Leave blank to keep current credentials</p>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">New Email</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => handleEditInputChange('email', e.target.value)}
+                    placeholder="Enter new email (optional)"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-password">New Password</Label>
+                  <Input
+                    id="edit-password"
+                    type="password"
+                    value={editFormData.password}
+                    onChange={(e) => handleEditInputChange('password', e.target.value)}
+                    placeholder="Enter new password (optional)"
+                    minLength={6}
+                  />
+                </div>
+              </div>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
