@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth, ClockRecord } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,19 +11,17 @@ import {
   FileText, 
   TrendingUp,
   Calendar,
-  CheckCircle2,
-  XCircle,
   User
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 
 const Analytics = () => {
-  const { users, clockRecords, getUserClockRecords, getTodayHours } = useAuth();
+  const { staff, clockRecords } = useAuth();
   const { reports } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
 
-  const employees = users.filter(u => u.role === 'employee' || u.role === 'admin');
+  const employees = staff.filter(s => s.role === 'employee' || s.role === 'admin');
   
   const filteredEmployees = employees.filter(emp =>
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -32,8 +30,10 @@ const Analytics = () => {
 
   const getEmployeeStats = (userId: string) => {
     const userReports = reports.filter(r => r.assignedTo === userId);
-    const userClockRecords = getUserClockRecords(userId);
-    const todayHours = getTodayHours(userId);
+    const userClockRecords = clockRecords.filter(r => r.user_id === userId);
+    const today = new Date().toISOString().split('T')[0];
+    const todayRecords = userClockRecords.filter(r => r.date === today);
+    const todayHours = todayRecords.reduce((acc, r) => acc + (r.duration || 0), 0) / 60;
     const totalHours = userClockRecords.reduce((acc, r) => acc + (r.duration || 0), 0) / 60;
     
     return {
@@ -42,11 +42,11 @@ const Analytics = () => {
       todayHours,
       totalHours,
       clockRecords: userClockRecords,
-      isClockedIn: users.find(u => u.id === userId)?.clockedIn || false,
+      isClockedIn: staff.find(s => s.user_id === userId)?.clockedIn || false,
     };
   };
 
-  const selectedEmployee = selectedUser ? users.find(u => u.id === selectedUser) : null;
+  const selectedEmployee = selectedUser ? staff.find(s => s.user_id === selectedUser) : null;
   const selectedStats = selectedUser ? getEmployeeStats(selectedUser) : null;
 
   return (
@@ -123,39 +123,46 @@ const Analytics = () => {
             </div>
           </div>
           <div className="max-h-[500px] overflow-y-auto">
-            {filteredEmployees.map((employee) => {
-              const stats = getEmployeeStats(employee.id);
-              return (
-                <button
-                  key={employee.id}
-                  onClick={() => setSelectedUser(employee.id)}
-                  className={`w-full p-4 border-b border-border last:border-0 hover:bg-secondary/50 transition-colors text-left ${
-                    selectedUser === employee.id ? 'bg-secondary' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-primary font-semibold">
-                          {employee.name.charAt(0)}
-                        </span>
+            {filteredEmployees.length === 0 ? (
+              <div className="p-8 text-center">
+                <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">No staff members yet</p>
+              </div>
+            ) : (
+              filteredEmployees.map((employee) => {
+                const stats = getEmployeeStats(employee.user_id);
+                return (
+                  <button
+                    key={employee.user_id}
+                    onClick={() => setSelectedUser(employee.user_id)}
+                    className={`w-full p-4 border-b border-border last:border-0 hover:bg-secondary/50 transition-colors text-left ${
+                      selectedUser === employee.user_id ? 'bg-secondary' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-primary font-semibold">
+                            {employee.name.charAt(0)}
+                          </span>
+                        </div>
+                        {stats.isClockedIn && (
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-card" />
+                        )}
                       </div>
-                      {stats.isClockedIn && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-card" />
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{employee.name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{employee.role}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-foreground">{stats.todayHours.toFixed(1)}h</p>
+                        <p className="text-xs text-muted-foreground">Today</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{employee.name}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{employee.role}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-foreground">{stats.todayHours.toFixed(1)}h</p>
-                      <p className="text-xs text-muted-foreground">Today</p>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -238,8 +245,8 @@ const Analytics = () => {
                               {format(new Date(record.date), 'MMM d, yyyy')}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {format(new Date(record.clockIn), 'h:mm a')}
-                              {record.clockOut && ` - ${format(new Date(record.clockOut), 'h:mm a')}`}
+                              {format(new Date(record.clock_in), 'h:mm a')}
+                              {record.clock_out && ` - ${format(new Date(record.clock_out), 'h:mm a')}`}
                             </p>
                           </div>
                         </div>
