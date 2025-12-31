@@ -132,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data?.role === 'owner' || data?.role === 'admin') {
       fetchStaff();
       fetchClockRecords();
+      fetchUserClockRecords(userId); // Also fetch own clock records for clock in/out
     } else if (data?.role === 'employee') {
       fetchUserClockRecords(userId);
     }
