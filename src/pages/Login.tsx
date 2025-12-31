@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import towLogo from '@/assets/tow-logo.png';
+import apexLogo from '@/assets/apex-logo.png';
 import { Truck } from 'lucide-react';
 
 const Login = () => {
@@ -47,10 +47,10 @@ const Login = () => {
       <div className="w-full max-w-sm animate-fade-in">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-card border border-border mb-4">
-            <img src={towLogo} alt="TowPro Logo" className="w-12 h-12 object-contain" />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-card border border-border mb-4 p-2">
+            <img src={apexLogo} alt="Apex Towing & Recovery" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-semibold text-foreground">TowPro Services</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Apex Towing & Recovery</h1>
           <p className="text-sm text-muted-foreground mt-1">Operations Portal</p>
         </div>
 
