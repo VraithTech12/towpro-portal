@@ -1,22 +1,32 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Search, Mail, Phone, Shield, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, Phone, Shield, Edit, Trash2, Loader2 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface StaffMemberEdit {
+  user_id: string;
+  name: string;
+  username: string;
+  phone?: string;
+  role: UserRole;
+}
+
 const Employees = () => {
   const { role, staff, fetchStaff } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<StaffMemberEdit | null>(null);
   
-  // Form state
+  // Add form state
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -24,6 +34,12 @@ const Employees = () => {
     phone: '',
     password: '',
     role: 'employee' as 'admin' | 'employee',
+  });
+
+  // Edit form state
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    phone: '',
   });
 
   // Owner or admin only page
@@ -38,6 +54,10 @@ const Employees = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleEditInputChange = (field: string, value: string) => {
+    setEditFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +80,7 @@ const Employees = () => {
       if (data?.error) throw new Error(data.error);
 
       toast.success('Staff member created successfully');
-      setIsOpen(false);
+      setIsAddOpen(false);
       setFormData({
         name: '',
         username: '',
@@ -70,11 +90,47 @@ const Employees = () => {
         role: 'employee',
       });
       
-      // Refresh staff list
       await fetchStaff();
     } catch (error: any) {
       console.error('Error creating staff:', error);
       toast.error(error.message || 'Failed to create staff member');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditOpen = (member: StaffMemberEdit) => {
+    setEditingStaff(member);
+    setEditFormData({
+      name: member.name,
+      phone: member.phone || '',
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStaff) return;
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: editFormData.name,
+          phone: editFormData.phone || null,
+        })
+        .eq('user_id', editingStaff.user_id);
+
+      if (error) throw error;
+
+      toast.success('Staff member updated');
+      setIsEditOpen(false);
+      setEditingStaff(null);
+      await fetchStaff();
+    } catch (error: any) {
+      console.error('Error updating staff:', error);
+      toast.error(error.message || 'Failed to update staff member');
     } finally {
       setIsLoading(false);
     }
@@ -106,7 +162,7 @@ const Employees = () => {
           <h1 className="text-2xl font-bold text-foreground">Employees</h1>
           <p className="text-muted-foreground">Manage your team members</p>
         </div>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4" />
@@ -184,7 +240,7 @@ const Employees = () => {
                 </Select>
               </div>
               <div className="flex justify-end gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
@@ -296,7 +352,12 @@ const Employees = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => handleEditOpen(member)}
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
                       {member.role !== 'owner' && (
@@ -317,6 +378,45 @@ const Employees = () => {
           </tbody>
         </table>
       </div>
+      {/* Edit Staff Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Staff Member</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input
+                id="edit-name"
+                value={editFormData.name}
+                onChange={(e) => handleEditInputChange('name', e.target.value)}
+                placeholder="John Doe"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Phone</Label>
+              <Input
+                id="edit-phone"
+                type="tel"
+                value={editFormData.phone}
+                onChange={(e) => handleEditInputChange('phone', e.target.value)}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
