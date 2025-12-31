@@ -1,47 +1,37 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Search, HelpCircle } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 
 const Header = () => {
   const { user } = useAuth();
 
-  const currentTime = new Date().toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
   return (
-    <header className="h-16 bg-card/50 backdrop-blur-sm border-b border-border/50 flex items-center justify-between px-6">
+    <header className="h-14 bg-card border-b border-border flex items-center justify-between px-6">
       {/* Search */}
-      <div className="flex-1 max-w-xl">
+      <div className="flex-1 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search reports, units, or employees..."
-            className="pl-10 bg-input/50"
+            placeholder="Search..."
+            className="pl-9 h-9 bg-background"
           />
         </div>
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative">
-          <HelpCircle className="w-5 h-5 text-muted-foreground" />
-        </Button>
-        
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-5 h-5 text-muted-foreground" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" />
-        </Button>
+      <div className="flex items-center gap-3">
+        <button className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary transition-colors relative">
+          <Bell className="w-5 h-5" />
+        </button>
 
-        <div className="text-right">
-          <p className="text-sm font-medium text-foreground">{currentTime}</p>
-          <p className="text-xs text-muted-foreground capitalize">{user?.role} Access</p>
-        </div>
-
-        <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
-          <span className="text-primary font-semibold text-sm">{user?.name?.charAt(0) || 'U'}</span>
+        <div className="flex items-center gap-2">
+          <div className="text-right">
+            <p className="text-sm font-medium text-foreground">{user?.name}</p>
+            <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <span className="text-primary font-medium text-sm">{user?.name?.charAt(0)}</span>
+          </div>
         </div>
       </div>
     </header>

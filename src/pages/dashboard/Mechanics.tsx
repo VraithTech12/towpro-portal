@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Wrench, User, Phone, Calendar } from 'lucide-react';
+import { Plus, Search, Wrench, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Mechanic {
   id: string;
@@ -10,127 +11,196 @@ interface Mechanic {
   specialization: string;
   phone: string;
   status: 'available' | 'busy' | 'off-duty';
-  currentJob?: string;
-  completedToday: number;
 }
-
-const mockMechanics: Mechanic[] = [
-  { id: '1', name: 'Robert Martinez', specialization: 'Engine & Transmission', phone: '(555) 111-2222', status: 'available', completedToday: 3 },
-  { id: '2', name: 'Kevin Thompson', specialization: 'Electrical Systems', phone: '(555) 222-3333', status: 'busy', currentJob: 'Unit 105 - Brake Repair', completedToday: 2 },
-  { id: '3', name: 'David Wilson', specialization: 'Hydraulics', phone: '(555) 333-4444', status: 'available', completedToday: 4 },
-  { id: '4', name: 'Anthony Lee', specialization: 'General Maintenance', phone: '(555) 444-5555', status: 'off-duty', completedToday: 0 },
-  { id: '5', name: 'Chris Anderson', specialization: 'Heavy Equipment', phone: '(555) 555-6666', status: 'busy', currentJob: 'Unit 102 - Winch Service', completedToday: 1 },
-];
-
-const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  available: { label: 'Available', color: 'text-green-400', bg: 'bg-green-500/20 border-green-500/30' },
-  busy: { label: 'Busy', color: 'text-primary', bg: 'bg-primary/20 border-primary/30' },
-  'off-duty': { label: 'Off Duty', color: 'text-muted-foreground', bg: 'bg-muted border-border' },
-};
 
 const Mechanics = () => {
   const { user } = useAuth();
+  const [mechanics, setMechanics] = useState<Mechanic[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newMechanic, setNewMechanic] = useState({
+    name: '',
+    specialization: '',
+    phone: '',
+  });
 
-  const filteredMechanics = mockMechanics.filter((mechanic) =>
-    mechanic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    mechanic.specialization.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMechanics = mechanics.filter((m) =>
+    m.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleAddMechanic = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMechanic.name || !newMechanic.specialization) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
+    setMechanics([
+      {
+        ...newMechanic,
+        id: Date.now().toString(),
+        status: 'available',
+      },
+      ...mechanics,
+    ]);
+
+    setNewMechanic({ name: '', specialization: '', phone: '' });
+    setShowAddForm(false);
+    toast.success('Mechanic added');
+  };
+
+  const handleStatusChange = (id: string, status: Mechanic['status']) => {
+    setMechanics((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, status } : m))
+    );
+    toast.success('Status updated');
+  };
+
+  const handleDelete = (id: string) => {
+    if (user?.role !== 'admin') {
+      toast.error('Only admins can delete');
+      return;
+    }
+    setMechanics((prev) => prev.filter((m) => m.id !== id));
+    toast.success('Mechanic removed');
+  };
+
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    available: { label: 'Available', className: 'bg-success/20 text-success' },
+    busy: { label: 'Busy', className: 'bg-primary/20 text-primary' },
+    'off-duty': { label: 'Off Duty', className: 'bg-muted text-muted-foreground' },
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Mechanics</h1>
-          <p className="text-muted-foreground">Manage your maintenance team</p>
+          <h1 className="text-xl font-semibold text-foreground">Mechanics</h1>
+          <p className="text-sm text-muted-foreground">Manage your maintenance team</p>
         </div>
         {user?.role === 'admin' && (
-          <Button>
+          <Button onClick={() => setShowAddForm(true)}>
             <Plus className="w-4 h-4" />
             Add Mechanic
           </Button>
         )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="glass-card rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-success">{mockMechanics.filter(m => m.status === 'available').length}</p>
-          <p className="text-sm text-muted-foreground">Available</p>
+      {/* Add Form Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md animate-fade-in">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Add Mechanic</h2>
+              <button onClick={() => setShowAddForm(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAddMechanic} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Name *</label>
+                <Input
+                  placeholder="Full name"
+                  value={newMechanic.name}
+                  onChange={(e) => setNewMechanic({ ...newMechanic, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Specialization *</label>
+                <Input
+                  placeholder="e.g., Engine & Transmission"
+                  value={newMechanic.specialization}
+                  onChange={(e) => setNewMechanic({ ...newMechanic, specialization: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Phone</label>
+                <Input
+                  placeholder="(555) 123-4567"
+                  value={newMechanic.phone}
+                  onChange={(e) => setNewMechanic({ ...newMechanic, phone: e.target.value })}
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowAddForm(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1">Add</Button>
+              </div>
+            </form>
+          </div>
         </div>
-        <div className="glass-card rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-primary">{mockMechanics.filter(m => m.status === 'busy').length}</p>
-          <p className="text-sm text-muted-foreground">Working</p>
-        </div>
-        <div className="glass-card rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-foreground">{mockMechanics.reduce((acc, m) => acc + m.completedToday, 0)}</p>
-          <p className="text-sm text-muted-foreground">Jobs Today</p>
-        </div>
-      </div>
+      )}
 
       {/* Search */}
-      <div className="glass-card rounded-xl p-4">
-        <div className="relative max-w-md">
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search mechanics..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-9 h-9"
           />
         </div>
       </div>
 
-      {/* Mechanics List */}
-      <div className="grid grid-cols-2 gap-4">
-        {filteredMechanics.map((mechanic) => {
-          const config = statusConfig[mechanic.status];
-          return (
-            <div key={mechanic.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all">
-              <div className="flex items-start justify-between mb-4">
+      {/* List */}
+      {filteredMechanics.length === 0 ? (
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <Wrench className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground mb-3">
+            {mechanics.length === 0 ? 'No mechanics added yet' : 'No mechanics match your search'}
+          </p>
+          {mechanics.length === 0 && user?.role === 'admin' && (
+            <Button variant="outline" size="sm" onClick={() => setShowAddForm(true)}>
+              <Plus className="w-4 h-4" />
+              Add Mechanic
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          {filteredMechanics.map((mechanic) => (
+            <div key={mechanic.id} className="bg-card border border-border rounded-xl p-4 hover:border-primary/20 transition-colors">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
-                    <span className="text-lg font-semibold text-foreground">{mechanic.name.charAt(0)}</span>
+                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+                    <span className="font-medium text-foreground">{mechanic.name.charAt(0)}</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">{mechanic.name}</h3>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Wrench className="w-3 h-3" />
-                      {mechanic.specialization}
-                    </p>
+                    <h3 className="font-medium text-foreground">{mechanic.name}</h3>
+                    <p className="text-xs text-muted-foreground">{mechanic.specialization}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${config.bg} ${config.color}`}>
-                  {config.label}
-                </span>
-              </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="w-4 h-4" />
-                  <span>{mechanic.phone}</span>
-                </div>
-                {mechanic.currentJob && (
-                  <div className="flex items-center gap-2 text-primary">
-                    <Calendar className="w-4 h-4" />
-                    <span>{mechanic.currentJob}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <span className="text-xs">Completed today: <span className="text-foreground font-medium">{mechanic.completedToday}</span></span>
-                </div>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1">View Profile</Button>
-                {mechanic.status === 'available' && (
-                  <Button size="sm" className="flex-1">Assign Job</Button>
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => handleDelete(mechanic.id)}
+                    className="w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
               </div>
+
+              {mechanic.phone && (
+                <p className="text-sm text-muted-foreground mb-3">Phone: {mechanic.phone}</p>
+              )}
+
+              <select
+                value={mechanic.status}
+                onChange={(e) => handleStatusChange(mechanic.id, e.target.value as Mechanic['status'])}
+                className={`w-full h-8 px-3 rounded border border-border text-xs font-medium ${statusConfig[mechanic.status].className}`}
+                disabled={user?.role !== 'admin'}
+              >
+                <option value="available">Available</option>
+                <option value="busy">Busy</option>
+                <option value="off-duty">Off Duty</option>
+              </select>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

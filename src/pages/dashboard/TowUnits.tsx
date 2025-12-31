@@ -1,156 +1,221 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useData, TowUnit } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Truck, MapPin, User, Phone } from 'lucide-react';
-
-interface TowUnit {
-  id: string;
-  name: string;
-  operator: string;
-  phone: string;
-  status: 'available' | 'dispatched' | 'offline' | 'maintenance';
-  location: string;
-  vehicleType: string;
-  licensePlate: string;
-}
-
-const mockTowUnits: TowUnit[] = [
-  { id: '1', name: 'Unit 101', operator: 'Mike Johnson', phone: '(555) 123-4567', status: 'available', location: 'Downtown Station', vehicleType: 'Flatbed', licensePlate: 'TOW-101' },
-  { id: '2', name: 'Unit 102', operator: 'Sarah Williams', phone: '(555) 234-5678', status: 'dispatched', location: 'Highway 95 Mile 42', vehicleType: 'Wheel-Lift', licensePlate: 'TOW-102' },
-  { id: '3', name: 'Unit 103', operator: 'Tom Davis', phone: '(555) 345-6789', status: 'available', location: 'West Side Yard', vehicleType: 'Flatbed', licensePlate: 'TOW-103' },
-  { id: '4', name: 'Unit 104', operator: 'Lisa Chen', phone: '(555) 456-7890', status: 'offline', location: 'N/A', vehicleType: 'Heavy-Duty', licensePlate: 'TOW-104' },
-  { id: '5', name: 'Unit 105', operator: 'James Brown', phone: '(555) 567-8901', status: 'maintenance', location: 'Mechanic Shop', vehicleType: 'Flatbed', licensePlate: 'TOW-105' },
-  { id: '6', name: 'Unit 106', operator: 'Maria Garcia', phone: '(555) 678-9012', status: 'dispatched', location: 'Main Street Accident', vehicleType: 'Wheel-Lift', licensePlate: 'TOW-106' },
-];
-
-const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  available: { label: 'Available', color: 'text-green-400', bg: 'bg-green-500/20 border-green-500/30' },
-  dispatched: { label: 'Dispatched', color: 'text-primary', bg: 'bg-primary/20 border-primary/30' },
-  offline: { label: 'Offline', color: 'text-muted-foreground', bg: 'bg-muted border-border' },
-  maintenance: { label: 'Maintenance', color: 'text-red-400', bg: 'bg-red-500/20 border-red-500/30' },
-};
+import { Plus, Search, Truck, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 const TowUnits = () => {
   const { user } = useAuth();
+  const { towUnits, addTowUnit, updateTowUnit, deleteTowUnit } = useData();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-
-  const filteredUnits = mockTowUnits.filter((unit) => {
-    const matchesSearch = unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      unit.operator.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || unit.status === selectedStatus;
-    return matchesSearch && matchesStatus;
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newUnit, setNewUnit] = useState({
+    name: '',
+    operator: '',
+    phone: '',
+    location: '',
+    vehicleType: 'flatbed',
+    licensePlate: '',
   });
 
+  const filteredUnits = towUnits.filter((unit) =>
+    unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    unit.operator.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAddUnit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUnit.name || !newUnit.operator || !newUnit.licensePlate) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+
+    addTowUnit({
+      ...newUnit,
+      status: 'available',
+    });
+
+    setNewUnit({ name: '', operator: '', phone: '', location: '', vehicleType: 'flatbed', licensePlate: '' });
+    setShowAddForm(false);
+    toast.success('Unit added successfully');
+  };
+
+  const handleStatusChange = (id: string, status: TowUnit['status']) => {
+    updateTowUnit(id, { status });
+    toast.success('Status updated');
+  };
+
+  const handleDelete = (id: string) => {
+    if (user?.role !== 'admin') {
+      toast.error('Only admins can delete units');
+      return;
+    }
+    deleteTowUnit(id);
+    toast.success('Unit deleted');
+  };
+
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    available: { label: 'Available', className: 'bg-success/20 text-success' },
+    dispatched: { label: 'Dispatched', className: 'bg-primary/20 text-primary' },
+    offline: { label: 'Offline', className: 'bg-muted text-muted-foreground' },
+    maintenance: { label: 'Maintenance', className: 'bg-destructive/20 text-destructive' },
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Tow Units</h1>
-          <p className="text-muted-foreground">Manage your fleet and dispatch units</p>
+          <h1 className="text-xl font-semibold text-foreground">Tow Units</h1>
+          <p className="text-sm text-muted-foreground">Manage your fleet</p>
         </div>
         {user?.role === 'admin' && (
-          <Button>
+          <Button onClick={() => setShowAddForm(true)}>
             <Plus className="w-4 h-4" />
             Add Unit
           </Button>
         )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="glass-card rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-success">{mockTowUnits.filter(u => u.status === 'available').length}</p>
-          <p className="text-sm text-muted-foreground">Available</p>
-        </div>
-        <div className="glass-card rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-primary">{mockTowUnits.filter(u => u.status === 'dispatched').length}</p>
-          <p className="text-sm text-muted-foreground">Dispatched</p>
-        </div>
-        <div className="glass-card rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-destructive">{mockTowUnits.filter(u => u.status === 'maintenance').length}</p>
-          <p className="text-sm text-muted-foreground">Maintenance</p>
-        </div>
-        <div className="glass-card rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-muted-foreground">{mockTowUnits.filter(u => u.status === 'offline').length}</p>
-          <p className="text-sm text-muted-foreground">Offline</p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="glass-card rounded-xl p-4">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search units or operators..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+      {/* Add Form Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md animate-fade-in">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Add New Unit</h2>
+              <button onClick={() => setShowAddForm(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAddUnit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Unit Name *</label>
+                <Input
+                  placeholder="e.g., Unit 101"
+                  value={newUnit.name}
+                  onChange={(e) => setNewUnit({ ...newUnit, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Operator *</label>
+                <Input
+                  placeholder="Operator name"
+                  value={newUnit.operator}
+                  onChange={(e) => setNewUnit({ ...newUnit, operator: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Phone</label>
+                <Input
+                  placeholder="(555) 123-4567"
+                  value={newUnit.phone}
+                  onChange={(e) => setNewUnit({ ...newUnit, phone: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">License Plate *</label>
+                <Input
+                  placeholder="TOW-101"
+                  value={newUnit.licensePlate}
+                  onChange={(e) => setNewUnit({ ...newUnit, licensePlate: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Vehicle Type</label>
+                <select
+                  value={newUnit.vehicleType}
+                  onChange={(e) => setNewUnit({ ...newUnit, vehicleType: e.target.value })}
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-input text-foreground text-sm"
+                >
+                  <option value="flatbed">Flatbed</option>
+                  <option value="wheel-lift">Wheel-Lift</option>
+                  <option value="heavy-duty">Heavy-Duty</option>
+                  <option value="integrated">Integrated</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowAddForm(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1">Add Unit</Button>
+              </div>
+            </form>
           </div>
+        </div>
+      )}
 
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="h-11 px-4 rounded-lg border border-border/50 bg-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-          >
-            <option value="all">All Status</option>
-            <option value="available">Available</option>
-            <option value="dispatched">Dispatched</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="offline">Offline</option>
-          </select>
+      {/* Search */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search units..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9"
+          />
         </div>
       </div>
 
-      {/* Units Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        {filteredUnits.map((unit) => {
-          const config = statusConfig[unit.status];
-          return (
-            <div key={unit.id} className="glass-card rounded-xl p-5 hover:border-primary/30 transition-all">
-              <div className="flex items-start justify-between mb-4">
+      {/* Units List */}
+      {filteredUnits.length === 0 ? (
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <Truck className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground mb-3">
+            {towUnits.length === 0 ? 'No units added yet' : 'No units match your search'}
+          </p>
+          {towUnits.length === 0 && user?.role === 'admin' && (
+            <Button variant="outline" size="sm" onClick={() => setShowAddForm(true)}>
+              <Plus className="w-4 h-4" />
+              Add First Unit
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          {filteredUnits.map((unit) => (
+            <div key={unit.id} className="bg-card border border-border rounded-xl p-4 hover:border-primary/20 transition-colors">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                    <Truck className="w-6 h-6 text-primary" />
+                  <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                    <Truck className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">{unit.name}</h3>
+                    <h3 className="font-medium text-foreground">{unit.name}</h3>
                     <p className="text-xs text-muted-foreground">{unit.licensePlate} • {unit.vehicleType}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${config.bg} ${config.color}`}>
-                  {config.label}
-                </span>
-              </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <User className="w-4 h-4" />
-                  <span>{unit.operator}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="w-4 h-4" />
-                  <span>{unit.phone}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span>{unit.location}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1">View Details</Button>
-                {unit.status === 'available' && (
-                  <Button size="sm" className="flex-1">Dispatch</Button>
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => handleDelete(unit.id)}
+                    className="w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
               </div>
+
+              <div className="space-y-1 text-sm text-muted-foreground mb-3">
+                <p>Operator: {unit.operator}</p>
+                {unit.phone && <p>Phone: {unit.phone}</p>}
+              </div>
+
+              <select
+                value={unit.status}
+                onChange={(e) => handleStatusChange(unit.id, e.target.value as TowUnit['status'])}
+                className={`w-full h-8 px-3 rounded border border-border text-xs font-medium ${statusConfig[unit.status].className}`}
+                disabled={user?.role !== 'admin'}
+              >
+                <option value="available">Available</option>
+                <option value="dispatched">Dispatched</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="offline">Offline</option>
+              </select>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

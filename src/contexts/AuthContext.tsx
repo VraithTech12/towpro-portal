@@ -5,47 +5,59 @@ export type UserRole = 'admin' | 'employee';
 interface User {
   id: string;
   name: string;
-  email: string;
+  username: string;
   role: UserRole;
-  avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const mockUsers: Record<string, User> = {
+// Predefined users
+const users: Record<string, { password: string; user: User }> = {
   admin: {
-    id: '1',
-    name: 'Mike Johnson',
-    email: 'admin@towpro.com',
-    role: 'admin',
+    password: '123',
+    user: {
+      id: '1',
+      name: 'Administrator',
+      username: 'admin',
+      role: 'admin',
+    },
   },
-  employee: {
-    id: '2',
-    name: 'Sarah Williams',
-    email: 'sarah@towpro.com',
-    role: 'employee',
+  employee1: {
+    password: 'emp123',
+    user: {
+      id: '2',
+      name: 'John Driver',
+      username: 'employee1',
+      role: 'employee',
+    },
   },
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
-    // Mock authentication - in real app, this would call an API
-    await new Promise((resolve) => setTimeout(resolve, 800));
+  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
     
-    if (email && password.length >= 4) {
-      setUser(mockUsers[role]);
-      return true;
+    const userRecord = users[username.toLowerCase()];
+    
+    if (!userRecord) {
+      return { success: false, error: 'User not found' };
     }
-    return false;
+    
+    if (userRecord.password !== password) {
+      return { success: false, error: 'Invalid password' };
+    }
+    
+    setUser(userRecord.user);
+    return { success: true };
   };
 
   const logout = () => {
