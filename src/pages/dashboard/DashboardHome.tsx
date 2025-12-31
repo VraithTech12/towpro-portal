@@ -38,26 +38,24 @@ const DashboardHome = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Clock In/Out Button for Employees */}
-          {role === 'employee' && (
-            <Button 
-              variant={isClockedIn ? "destructive" : "default"}
-              onClick={isClockedIn ? clockOut : clockIn}
-              className="gap-2"
-            >
-              {isClockedIn ? (
-                <>
-                  <StopCircle className="w-4 h-4" />
-                  Clock Out
-                </>
-              ) : (
-                <>
-                  <PlayCircle className="w-4 h-4" />
-                  Clock In
-                </>
-              )}
-            </Button>
-          )}
+          {/* Clock In/Out Button for all staff */}
+          <Button 
+            variant={isClockedIn ? "destructive" : "default"}
+            onClick={isClockedIn ? clockOut : clockIn}
+            className="gap-2"
+          >
+            {isClockedIn ? (
+              <>
+                <StopCircle className="w-4 h-4" />
+                Clock Out
+              </>
+            ) : (
+              <>
+                <PlayCircle className="w-4 h-4" />
+                Clock In
+              </>
+            )}
+          </Button>
           <Link to="/dashboard/new-report">
             <Button variant="outline">
               <Plus className="w-4 h-4" />
@@ -67,30 +65,28 @@ const DashboardHome = () => {
         </div>
       </div>
 
-      {/* Clock Status for Employees */}
-      {role === 'employee' && (
-        <div className={`p-4 rounded-xl border ${isClockedIn ? 'bg-success/10 border-success/30' : 'bg-card border-border'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Clock className={`w-5 h-5 ${isClockedIn ? 'text-success' : 'text-muted-foreground'}`} />
-              <div>
-                <p className="font-medium text-foreground">
-                  {isClockedIn ? 'Currently Clocked In' : 'Not Clocked In'}
+      {/* Clock Status */}
+      <div className={`p-4 rounded-xl border ${isClockedIn ? 'bg-success/10 border-success/30' : 'bg-card border-border'}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Clock className={`w-5 h-5 ${isClockedIn ? 'text-success' : 'text-muted-foreground'}`} />
+            <div>
+              <p className="font-medium text-foreground">
+                {isClockedIn ? 'Currently Clocked In' : 'Not Clocked In'}
+              </p>
+              {isClockedIn && currentClockRecord && (
+                <p className="text-sm text-muted-foreground">
+                  Started {formatDistanceToNow(new Date(currentClockRecord.clock_in), { addSuffix: true })}
                 </p>
-                {isClockedIn && currentClockRecord && (
-                  <p className="text-sm text-muted-foreground">
-                    Started {formatDistanceToNow(new Date(currentClockRecord.clock_in), { addSuffix: true })}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Today's Hours</p>
-              <p className="text-xl font-bold text-foreground">{todayHours.toFixed(1)}h</p>
+              )}
             </div>
           </div>
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">Today's Hours</p>
+            <p className="text-xl font-bold text-foreground">{todayHours.toFixed(1)}h</p>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Stats Grid */}
       <div className={`grid gap-4 ${isOwnerOrAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
