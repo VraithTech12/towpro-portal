@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   Wrench,
-  PlusCircle
+  PlusCircle,
+  BarChart3
 } from 'lucide-react';
 import apexLogo from '@/assets/apex-logo.png';
 
@@ -27,7 +28,8 @@ const Sidebar = () => {
   ];
 
   const adminItems = [
-    { path: '/dashboard/employees', icon: Users, label: 'Employees' },
+    { path: '/dashboard/employees', icon: Users, label: 'Staff' },
+    { path: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -59,7 +61,7 @@ const Sidebar = () => {
           </Link>
         ))}
 
-        {user?.role === 'admin' && (
+        {(user?.role === 'admin' || user?.role === 'owner') && (
           <>
             <div className="w-6 h-px bg-border my-2 mx-auto" />
             {adminItems.map((item) => (
