@@ -1,21 +1,22 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
+import { useOnlinePresence } from '@/hooks/useOnlinePresence';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Plus, FileText, Truck, Wrench, ArrowRight, Clock, PlayCircle, StopCircle, Users, BarChart3 } from 'lucide-react';
+import { Plus, FileText, Truck, Wrench, ArrowRight, Clock, PlayCircle, StopCircle, Users, BarChart3, Wifi } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const DashboardHome = () => {
   const { profile, role, staff, clockIn, clockOut, isClockedIn, todayHours, clockRecords, user } = useAuth();
   const { reports, towUnits } = useData();
+  const { onlineCount } = useOnlinePresence();
 
   const userReports = role === 'employee' 
     ? reports.filter(r => r.assignedTo === user?.id)
     : reports;
 
   const openReports = userReports.filter(r => r.status === 'open' || r.status === 'in-progress').length;
-  const availableUnits = towUnits.filter(u => u.status === 'available').length;
-  const employeeCount = staff.filter(s => s.role === 'employee').length;
+  const clockedInCount = staff.filter(s => s.clockedIn).length;
 
   const isOwnerOrAdmin = role === 'owner' || role === 'admin';
 
@@ -89,7 +90,7 @@ const DashboardHome = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className={`grid gap-4 ${isOwnerOrAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
+      <div className={`grid gap-4 ${isOwnerOrAdmin ? 'grid-cols-4' : 'grid-cols-2'}`}>
         <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors">
           <div className="flex items-center justify-between mb-3">
             <FileText className="w-5 h-5 text-primary" />
@@ -99,33 +100,35 @@ const DashboardHome = () => {
           <p className="text-sm text-muted-foreground mt-1">Open Reports</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors">
+        <div className="bg-card border border-border rounded-xl p-5 hover:border-success/30 transition-colors">
           <div className="flex items-center justify-between mb-3">
-            <Truck className="w-5 h-5 text-primary" />
-            <span className="text-xs font-medium px-2 py-1 rounded-full bg-secondary text-muted-foreground">Fleet</span>
+            <Truck className="w-5 h-5 text-success" />
+            <span className="text-xs font-medium px-2 py-1 rounded-full bg-success/10 text-success">On Duty</span>
           </div>
-          <p className="text-3xl font-bold text-foreground">{towUnits.length}</p>
-          <p className="text-sm text-muted-foreground mt-1">Total Units</p>
-        </div>
-
-        <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors">
-          <div className="flex items-center justify-between mb-3">
-            <Wrench className="w-5 h-5 text-success" />
-            <span className="text-xs font-medium px-2 py-1 rounded-full bg-success/10 text-success">Ready</span>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{availableUnits}</p>
-          <p className="text-sm text-muted-foreground mt-1">Available Units</p>
+          <p className="text-3xl font-bold text-foreground">{clockedInCount}</p>
+          <p className="text-sm text-muted-foreground mt-1">Clocked In</p>
         </div>
 
         {isOwnerOrAdmin && (
-          <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors">
-            <div className="flex items-center justify-between mb-3">
-              <Users className="w-5 h-5 text-primary" />
-              <span className="text-xs font-medium px-2 py-1 rounded-full bg-secondary text-muted-foreground">Team</span>
+          <>
+            <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors">
+              <div className="flex items-center justify-between mb-3">
+                <Wifi className="w-5 h-5 text-blue-400" />
+                <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-500/10 text-blue-400">Live</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground">{onlineCount}</p>
+              <p className="text-sm text-muted-foreground mt-1">Online Now</p>
             </div>
-            <p className="text-3xl font-bold text-foreground">{employeeCount}</p>
-            <p className="text-sm text-muted-foreground mt-1">Employees</p>
-          </div>
+
+            <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors">
+              <div className="flex items-center justify-between mb-3">
+                <Users className="w-5 h-5 text-primary" />
+                <span className="text-xs font-medium px-2 py-1 rounded-full bg-secondary text-muted-foreground">Team</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground">{staff.length}</p>
+              <p className="text-sm text-muted-foreground mt-1">Total Staff</p>
+            </div>
+          </>
         )}
       </div>
 
