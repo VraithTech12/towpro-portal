@@ -37,8 +37,8 @@ const Sidebar = () => {
     <aside className="fixed left-0 top-0 h-screen w-16 bg-card border-r border-border flex flex-col items-center py-4 z-50">
       {/* Logo */}
       <div className="mb-6">
-        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center p-1">
-          <img src={apexLogo} alt="Apex Towing" className="w-full h-full object-contain" />
+        <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/20">
+          <img src={apexLogo} alt="Apex Towing" className="w-full h-full object-cover" />
         </div>
       </div>
 
