@@ -58,8 +58,8 @@ const Login = () => {
         <div className="w-full max-w-md">
           {/* Logo Section */}
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-card/90 backdrop-blur-xl border border-border/50 mb-6 shadow-2xl">
-              <img src={apexLogo} alt="Apex Towing & Recovery" className="w-20 h-20 object-contain" />
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl overflow-hidden mb-6 shadow-2xl border border-primary/20">
+              <img src={apexLogo} alt="Apex Towing & Recovery" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">
               Apex Towing & Recovery
