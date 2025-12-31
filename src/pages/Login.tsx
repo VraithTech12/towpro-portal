@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import apexLogo from '@/assets/apex-logo.png';
-import { Truck } from 'lucide-react';
+import loginBg from '@/assets/login-bg.png';
+import { LogIn, User, Lock, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -43,81 +43,106 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm animate-fade-in">
-        {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-card border border-border mb-4 p-2">
-            <img src={apexLogo} alt="Apex Towing & Recovery" className="w-full h-full object-contain" />
+    <div className="min-h-screen flex relative overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${loginBg})` }}
+      />
+      
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/85 to-background/70" />
+      
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          {/* Logo Section */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-card/90 backdrop-blur-xl border border-border/50 mb-6 shadow-2xl">
+              <img src={apexLogo} alt="Apex Towing & Recovery" className="w-20 h-20 object-contain" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
+              Apex Towing & Recovery
+            </h1>
+            <p className="text-muted-foreground mt-2 text-sm">Operations Portal</p>
           </div>
-          <h1 className="text-2xl font-semibold text-foreground">Apex Towing & Recovery</h1>
-          <p className="text-sm text-muted-foreground mt-1">Operations Portal</p>
-        </div>
 
-        {/* Login Card */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-lg font-medium text-foreground mb-1">Sign In</h2>
-          <p className="text-sm text-muted-foreground mb-6">Enter your credentials to continue</p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Username</label>
-              <Input
-                type="text"
-                placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-              />
+          {/* Login Card */}
+          <div className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-2xl">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-foreground">Welcome Back</h2>
+              <p className="text-sm text-muted-foreground mt-1">Sign in to access your dashboard</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
-              <Input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="remember"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked === true)}
-              />
-              <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                Remember me
-              </label>
-            </div>
-
-            {error && (
-              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                {error}
-              </div>
-            )}
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  Signing In...
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Username</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="pl-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
+                    autoComplete="username"
+                  />
                 </div>
-              ) : (
-                <>
-                  <Truck className="w-4 h-4" />
-                  Sign In
-                </>
-              )}
-            </Button>
-          </form>
-        </div>
+              </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Need access? Contact your administrator.
-        </p>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 h-12 bg-secondary/50 border-border/50 focus:border-primary"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-destructive" />
+                  {error}
+                </div>
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    Signing In...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <LogIn className="w-5 h-5" />
+                    Sign In
+                  </div>
+                )}
+              </Button>
+            </form>
+          </div>
+
+          <p className="text-center text-xs text-muted-foreground mt-8">
+            Contact your administrator if you need access.
+          </p>
+        </div>
       </div>
     </div>
   );
