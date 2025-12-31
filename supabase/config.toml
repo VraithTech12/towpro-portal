@@ -1,1 +1,4 @@
 project_id = "tdvuohfextmqhqsjiixa"
+
+[functions.setup-owner]
+verify_jwt = false
