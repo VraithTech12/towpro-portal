@@ -1,103 +1,188 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useData, Report } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import ReportCard, { Report } from '@/components/dashboard/ReportCard';
-import { Plus, Search, Filter } from 'lucide-react';
-
-const allReports: Report[] = [
-  { id: '421', title: 'Highway Recovery', type: 'tow', status: 'open', dateCreated: '12/31/2025', vehicle: '2019 Honda Accord' },
-  { id: '420', title: 'Downtown Accident', type: 'accident', status: 'open', dateCreated: '12/31/2025', vehicle: '2021 Ford F-150' },
-  { id: '419', title: 'Impound Request', type: 'impound', status: 'in-progress', dateCreated: '12/30/2025', vehicle: '2018 Chevrolet Malibu' },
-  { id: '418', title: 'Roadside Assist', type: 'roadside', status: 'closed', dateCreated: '12/30/2025', vehicle: '2020 Tesla Model 3' },
-  { id: '417', title: 'Vehicle Breakdown', type: 'tow', status: 'pending', dateCreated: '12/29/2025', vehicle: '2017 Toyota Camry' },
-  { id: '416', title: 'Parking Violation', type: 'impound', status: 'closed', dateCreated: '12/29/2025', vehicle: '2022 BMW X5' },
-  { id: '415', title: 'Accident Scene', type: 'accident', status: 'closed', dateCreated: '12/28/2025', vehicle: '2019 Nissan Altima' },
-  { id: '414', title: 'Flat Tire Assist', type: 'roadside', status: 'closed', dateCreated: '12/28/2025', vehicle: '2021 Hyundai Sonata' },
-];
+import { Plus, Search, FileText, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Reports = () => {
   const { user } = useAuth();
+  const { reports, updateReport, deleteReport } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  const filteredReports = allReports.filter((report) => {
-    const matchesSearch = report.id.includes(searchTerm) || report.vehicle?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter reports based on role
+  const userReports = user?.role === 'admin' 
+    ? reports 
+    : reports.filter(r => r.assignedTo === user?.id);
+
+  const filteredReports = userReports.filter((report) => {
+    const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.customerName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || report.type === selectedType;
     const matchesStatus = selectedStatus === 'all' || report.status === selectedStatus;
     return matchesSearch && matchesType && matchesStatus;
   });
 
+  const handleStatusChange = (id: string, status: Report['status']) => {
+    updateReport(id, { status });
+    toast.success('Status updated');
+  };
+
+  const handleDelete = (id: string) => {
+    if (user?.role !== 'admin') {
+      toast.error('Only admins can delete reports');
+      return;
+    }
+    deleteReport(id);
+    toast.success('Report deleted');
+  };
+
+  const typeLabels: Record<string, { label: string; className: string }> = {
+    tow: { label: 'Tow', className: 'bg-blue-500/20 text-blue-400' },
+    roadside: { label: 'Roadside', className: 'bg-green-500/20 text-green-400' },
+    accident: { label: 'Accident', className: 'bg-red-500/20 text-red-400' },
+    impound: { label: 'Impound', className: 'bg-purple-500/20 text-purple-400' },
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Reports</h1>
-          <p className="text-muted-foreground">Manage all towing and service reports</p>
+          <h1 className="text-xl font-semibold text-foreground">Reports</h1>
+          <p className="text-sm text-muted-foreground">
+            {user?.role === 'admin' ? 'All service reports' : 'Your assigned reports'}
+          </p>
         </div>
-        {user?.role === 'admin' && (
+        <Link to="/dashboard/new-report">
           <Button>
             <Plus className="w-4 h-4" />
-            Create Report
+            New Report
           </Button>
-        )}
+        </Link>
       </div>
 
       {/* Filters */}
-      <div className="glass-card rounded-xl p-4">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by report ID or vehicle..."
+              placeholder="Search reports..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-9 h-9"
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="h-11 px-4 rounded-lg border border-border/50 bg-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="all">All Types</option>
-              <option value="tow">Tow</option>
-              <option value="roadside">Roadside</option>
-              <option value="accident">Accident</option>
-              <option value="impound">Impound</option>
-            </select>
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            className="h-9 px-3 rounded-lg border border-border bg-input text-foreground text-sm"
+          >
+            <option value="all">All Types</option>
+            <option value="tow">Tow</option>
+            <option value="roadside">Roadside</option>
+            <option value="accident">Accident</option>
+            <option value="impound">Impound</option>
+          </select>
 
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="h-11 px-4 rounded-lg border border-border/50 bg-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="all">All Status</option>
-              <option value="open">Open</option>
-              <option value="in-progress">In Progress</option>
-              <option value="pending">Pending</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="h-9 px-3 rounded-lg border border-border bg-input text-foreground text-sm"
+          >
+            <option value="all">All Status</option>
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="pending">Pending</option>
+            <option value="closed">Closed</option>
+          </select>
         </div>
       </div>
 
       {/* Reports List */}
-      <div className="space-y-3">
-        {filteredReports.map((report) => (
-          <ReportCard key={report.id} report={report} compact />
-        ))}
-
-        {filteredReports.length === 0 && (
-          <div className="glass-card rounded-xl p-12 text-center">
-            <p className="text-muted-foreground">No reports found matching your criteria</p>
-          </div>
-        )}
-      </div>
+      {filteredReports.length === 0 ? (
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground mb-3">
+            {reports.length === 0 ? 'No reports yet' : 'No reports match your filters'}
+          </p>
+          {reports.length === 0 && (
+            <Link to="/dashboard/new-report">
+              <Button variant="outline" size="sm">
+                <Plus className="w-4 h-4" />
+                Create Report
+              </Button>
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">ID</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Title</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Type</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Customer</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Date</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
+                {user?.role === 'admin' && (
+                  <th className="text-right p-3 text-xs font-medium text-muted-foreground">Actions</th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReports.map((report) => (
+                <tr key={report.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                  <td className="p-3 text-sm font-medium text-foreground">#{report.id.slice(-4)}</td>
+                  <td className="p-3">
+                    <div>
+                      <p className="text-sm text-foreground">{report.title}</p>
+                      <p className="text-xs text-muted-foreground">{report.vehicle}</p>
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${typeLabels[report.type].className}`}>
+                      {typeLabels[report.type].label}
+                    </span>
+                  </td>
+                  <td className="p-3 text-sm text-muted-foreground">{report.customerName}</td>
+                  <td className="p-3 text-sm text-muted-foreground">{report.dateCreated}</td>
+                  <td className="p-3">
+                    <select
+                      value={report.status}
+                      onChange={(e) => handleStatusChange(report.id, e.target.value as Report['status'])}
+                      className="h-7 px-2 rounded border border-border bg-input text-foreground text-xs"
+                      disabled={user?.role !== 'admin' && report.status === 'closed'}
+                    >
+                      <option value="open">Open</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="pending">Pending</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </td>
+                  {user?.role === 'admin' && (
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => handleDelete(report.id)}
+                        className="w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

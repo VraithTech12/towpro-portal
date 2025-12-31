@@ -7,13 +7,13 @@ const DashboardLayout = () => {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <div className="ml-20">
+      <div className="ml-16">
         <Header />
         <main className="p-6">
           <Outlet />

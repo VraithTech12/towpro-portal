@@ -1,104 +1,147 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
-import ReportCard, { Report } from '@/components/dashboard/ReportCard';
-import TowUnitsPanel from '@/components/dashboard/TowUnitsPanel';
-import LatestReports from '@/components/dashboard/LatestReports';
-import CompletedJobs from '@/components/dashboard/CompletedJobs';
-import { Plus, FileText, Truck } from 'lucide-react';
-
-const mockAssignedReports: Report[] = [
-  { id: '421', title: 'Highway Recovery', type: 'tow', status: 'open', dateCreated: '12/31/2025', vehicle: '2019 Honda Accord' },
-  { id: '420', title: 'Downtown Accident', type: 'accident', status: 'open', dateCreated: '12/31/2025', vehicle: '2021 Ford F-150' },
-  { id: '419', title: 'Impound Request', type: 'impound', status: 'in-progress', dateCreated: '12/30/2025', vehicle: '2018 Chevrolet Malibu' },
-  { id: '418', title: 'Roadside Assist', type: 'roadside', status: 'open', dateCreated: '12/30/2025', vehicle: '2020 Tesla Model 3' },
-  { id: '417', title: 'Vehicle Breakdown', type: 'tow', status: 'pending', dateCreated: '12/29/2025', vehicle: '2017 Toyota Camry' },
-  { id: '416', title: 'Parking Violation', type: 'impound', status: 'open', dateCreated: '12/29/2025', vehicle: '2022 BMW X5' },
-];
+import { Link } from 'react-router-dom';
+import { Plus, FileText, Truck, Wrench, ArrowRight } from 'lucide-react';
 
 const DashboardHome = () => {
   const { user } = useAuth();
+  const { reports, towUnits } = useData();
+
+  const userReports = user?.role === 'admin' 
+    ? reports 
+    : reports.filter(r => r.assignedTo === user?.id);
+
+  const openReports = userReports.filter(r => r.status === 'open' || r.status === 'in-progress').length;
+  const availableUnits = towUnits.filter(u => u.status === 'available').length;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Welcome Section */}
+      {/* Welcome */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Welcome back, {user?.name?.split(' ')[0]}</h1>
-          <p className="text-muted-foreground">Here's your operations overview for today</p>
+          <h1 className="text-xl font-semibold text-foreground">
+            Welcome, {user?.name?.split(' ')[0]}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {user?.role === 'admin' ? 'Full system access' : 'View your assigned reports'}
+          </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline">
-            <FileText className="w-4 h-4" />
-            View All Reports
-          </Button>
+        <Link to="/dashboard/new-report">
           <Button>
             <Plus className="w-4 h-4" />
             New Report
           </Button>
+        </Link>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <FileText className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Active</span>
+          </div>
+          <p className="text-2xl font-semibold text-foreground">{openReports}</p>
+          <p className="text-sm text-muted-foreground">Open Reports</p>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <Truck className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Fleet</span>
+          </div>
+          <p className="text-2xl font-semibold text-foreground">{towUnits.length}</p>
+          <p className="text-sm text-muted-foreground">Total Units</p>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <Wrench className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-success">Ready</span>
+          </div>
+          <p className="text-2xl font-semibold text-foreground">{availableUnits}</p>
+          <p className="text-sm text-muted-foreground">Available Units</p>
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-muted-foreground text-sm">Assigned to You</span>
-            <FileText className="w-5 h-5 text-primary" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">{mockAssignedReports.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">Active reports</p>
-        </div>
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-muted-foreground text-sm">Open Jobs</span>
-            <Truck className="w-5 h-5 text-warning" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">4</p>
-          <p className="text-xs text-muted-foreground mt-1">Awaiting dispatch</p>
-        </div>
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-muted-foreground text-sm">Completed Today</span>
-            <Truck className="w-5 h-5 text-success" />
-          </div>
-          <p className="text-3xl font-bold text-success">8</p>
-          <p className="text-xs text-muted-foreground mt-1">+2 from yesterday</p>
-        </div>
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-muted-foreground text-sm">Revenue Today</span>
-            <span className="text-xl">$</span>
-          </div>
-          <p className="text-3xl font-bold text-foreground">$1,245</p>
-          <p className="text-xs text-success mt-1">↑ 12% from average</p>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-3 gap-6">
-        {/* Assigned Reports - Takes 2 columns */}
-        <div className="col-span-2 space-y-4">
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-4">
+        <Link 
+          to="/dashboard/reports"
+          className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors group"
+        >
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground uppercase tracking-wide">Assigned to You</h2>
-            <Button variant="ghost" size="sm" className="text-primary">View All</Button>
+            <div>
+              <h3 className="font-medium text-foreground mb-1">View Reports</h3>
+              <p className="text-sm text-muted-foreground">
+                {userReports.length === 0 ? 'No reports yet' : `${userReports.length} total reports`}
+              </p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {mockAssignedReports.slice(0, 6).map((report) => (
-              <ReportCard key={report.id} report={report} />
-            ))}
-          </div>
-        </div>
+        </Link>
 
-        {/* Right Panel - Tow Units */}
-        <div className="space-y-6">
-          <TowUnitsPanel />
-        </div>
+        <Link 
+          to="/dashboard/tow-units"
+          className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-foreground mb-1">Manage Fleet</h3>
+              <p className="text-sm text-muted-foreground">
+                {towUnits.length === 0 ? 'No units added' : `${towUnits.length} tow units`}
+              </p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+        </Link>
       </div>
 
-      {/* Bottom Section */}
-      <div className="grid grid-cols-2 gap-6">
-        <LatestReports />
-        <CompletedJobs />
+      {/* Recent Reports */}
+      <div className="bg-card border border-border rounded-xl">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h2 className="font-medium text-foreground">Recent Reports</h2>
+          <Link to="/dashboard/reports" className="text-sm text-primary hover:underline">
+            View All
+          </Link>
+        </div>
+        <div className="p-4">
+          {userReports.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground mb-3">No reports yet</p>
+              <Link to="/dashboard/new-report">
+                <Button variant="outline" size="sm">
+                  <Plus className="w-4 h-4" />
+                  Create First Report
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {userReports.slice(0, 5).map((report) => (
+                <div 
+                  key={report.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-foreground">#{report.id.slice(-4)}</span>
+                    <span className="text-sm text-muted-foreground">{report.title}</span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                    report.status === 'open' ? 'bg-primary/20 text-primary' :
+                    report.status === 'in-progress' ? 'bg-blue-500/20 text-blue-400' :
+                    report.status === 'closed' ? 'bg-muted text-muted-foreground' :
+                    'bg-warning/20 text-warning'
+                  }`}>
+                    {report.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
