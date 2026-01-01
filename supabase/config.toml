@@ -4,7 +4,10 @@ project_id = "tdvuohfextmqhqsjiixa"
 verify_jwt = false
 
 [functions.create-staff]
+verify_jwt = false
 
 [functions.delete-staff]
+verify_jwt = false
 
 [functions.update-staff]
+verify_jwt = false
