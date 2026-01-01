@@ -5,10 +5,10 @@ import { Navigate } from 'react-router-dom';
 import { Settings as SettingsIcon, Building, Bell, Shield, Palette, Save } from 'lucide-react';
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { role } = useAuth();
 
-  // Admin-only page
-  if (user?.role !== 'admin') {
+  // Owner or admin only page
+  if (role !== 'owner' && role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }
 
