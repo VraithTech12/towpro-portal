@@ -46,8 +46,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { userId, name, phone, email, password } = await req.json();
-    console.log('Updating staff member:', { userId, name, email: email ? 'provided' : 'not provided' });
+    const { userId, name, username, phone, email, password } = await req.json();
+    console.log('Updating staff member:', { userId, name, username, email: email ? 'provided' : 'not provided' });
 
     // Check if caller is updating themselves or has admin/owner permissions
     const isSelfUpdate = caller.id === userId;
@@ -106,8 +106,9 @@ Deno.serve(async (req) => {
     }
 
     // Update profile
-    const profileUpdate: { name?: string; phone?: string | null } = {};
+    const profileUpdate: { name?: string; username?: string; phone?: string | null } = {};
     if (name) profileUpdate.name = name;
+    if (username) profileUpdate.username = username;
     if (phone !== undefined) profileUpdate.phone = phone || null;
 
     if (Object.keys(profileUpdate).length > 0) {

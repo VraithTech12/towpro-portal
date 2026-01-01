@@ -45,6 +45,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   fetchStaff: () => Promise<void>;
   fetchClockRecords: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   clockIn: () => Promise<void>;
   clockOut: () => Promise<void>;
   isClockedIn: boolean;
@@ -319,6 +320,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUserClockRecords(user.id);
   };
 
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchUserProfile(user.id);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -333,6 +340,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       fetchStaff,
       fetchClockRecords,
+      refreshProfile,
       clockIn,
       clockOut,
       isClockedIn,
