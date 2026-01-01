@@ -5,44 +5,55 @@ import { useData, Report } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, FileText, Trash2, MapPin, Phone, User, Car, FileType, Calendar, StickyNote } from 'lucide-react';
+import { Plus, Search, FileText, Trash2, MapPin, Phone, User, FileType, Calendar, StickyNote, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Reports = () => {
-  const { user } = useAuth();
-  const { reports, updateReport, deleteReport } = useData();
+  const { user, role } = useAuth();
+  const { reports, updateReport, deleteReport, isLoadingReports } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+  const isOwnerOrAdmin = role === 'owner' || role === 'admin';
+
   // Filter reports based on role
-  const userReports = user?.role === 'admin' 
+  const userReports = isOwnerOrAdmin
     ? reports 
-    : reports.filter(r => r.assignedTo === user?.id);
+    : reports.filter(r => r.assignedTo === user?.id || r.createdBy === user?.id);
 
   const filteredReports = userReports.filter((report) => {
     const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+      (report.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+      report.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || report.type === selectedType;
     const matchesStatus = selectedStatus === 'all' || report.status === selectedStatus;
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const handleStatusChange = (id: string, status: Report['status']) => {
-    updateReport(id, { status });
-    toast.success('Status updated');
+  const handleStatusChange = async (id: string, status: Report['status']) => {
+    const success = await updateReport(id, { status });
+    if (success) {
+      toast.success('Status updated');
+    } else {
+      toast.error('Failed to update status');
+    }
   };
 
-  const handleDelete = (id: string) => {
-    if (user?.role !== 'admin') {
-      toast.error('Only admins can delete reports');
+  const handleDelete = async (id: string) => {
+    if (!isOwnerOrAdmin) {
+      toast.error('Only owners and admins can delete reports');
       return;
     }
-    deleteReport(id);
-    toast.success('Report deleted');
+    const success = await deleteReport(id);
+    if (success) {
+      toast.success('Report deleted');
+      setIsDetailOpen(false);
+    } else {
+      toast.error('Failed to delete report');
+    }
   };
 
   const handleViewReport = (report: Report) => {
@@ -52,8 +63,7 @@ const Reports = () => {
 
   const typeLabels: Record<string, { label: string; className: string }> = {
     tow: { label: 'Tow', className: 'bg-blue-500/20 text-blue-400' },
-    roadside: { label: 'Roadside', className: 'bg-green-500/20 text-green-400' },
-    accident: { label: 'Accident', className: 'bg-red-500/20 text-red-400' },
+    roadside: { label: 'Road Assistance', className: 'bg-green-500/20 text-green-400' },
     impound: { label: 'Impound', className: 'bg-purple-500/20 text-purple-400' },
   };
 
@@ -63,7 +73,7 @@ const Reports = () => {
         <div>
           <h1 className="text-xl font-semibold text-foreground">Reports</h1>
           <p className="text-sm text-muted-foreground">
-            {user?.role === 'admin' ? 'All service reports' : 'Your assigned reports'}
+            {isOwnerOrAdmin ? 'All service reports' : 'Your assigned reports'}
           </p>
         </div>
         <Link to="/dashboard/new-report">
@@ -94,8 +104,7 @@ const Reports = () => {
           >
             <option value="all">All Types</option>
             <option value="tow">Tow</option>
-            <option value="roadside">Roadside</option>
-            <option value="accident">Accident</option>
+            <option value="roadside">Road Assistance</option>
             <option value="impound">Impound</option>
           </select>
 
@@ -114,7 +123,12 @@ const Reports = () => {
       </div>
 
       {/* Reports List */}
-      {filteredReports.length === 0 ? (
+      {isLoadingReports ? (
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-muted-foreground">Loading reports...</p>
+        </div>
+      ) : filteredReports.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground mb-3">
@@ -140,7 +154,7 @@ const Reports = () => {
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground">Customer</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground">Date</th>
                 <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
-                {user?.role === 'admin' && (
+                {isOwnerOrAdmin && (
                   <th className="text-right p-3 text-xs font-medium text-muted-foreground">Actions</th>
                 )}
               </tr>
@@ -154,24 +168,30 @@ const Reports = () => {
                 >
                   <td className="p-3 text-sm font-medium text-foreground">#{report.id.slice(-4)}</td>
                   <td className="p-3">
-                    <div>
+                    <div className="flex items-center gap-2">
                       <p className="text-sm text-foreground">{report.title}</p>
-                      <p className="text-xs text-muted-foreground">{report.vehicle}</p>
+                      {report.pdTow && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-400">
+                          PD
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${typeLabels[report.type].className}`}>
-                      {typeLabels[report.type].label}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${typeLabels[report.type]?.className || 'bg-muted text-muted-foreground'}`}>
+                      {typeLabels[report.type]?.label || report.type}
                     </span>
                   </td>
-                  <td className="p-3 text-sm text-muted-foreground">{report.customerName}</td>
+                  <td className="p-3 text-sm text-muted-foreground">
+                    {report.pdTow ? <span className="italic">PD Tow</span> : report.customerName || 'N/A'}
+                  </td>
                   <td className="p-3 text-sm text-muted-foreground">{report.dateCreated}</td>
                   <td className="p-3" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={report.status}
                       onChange={(e) => handleStatusChange(report.id, e.target.value as Report['status'])}
                       className="h-7 px-2 rounded border border-border bg-input text-foreground text-xs"
-                      disabled={user?.role !== 'admin' && report.status === 'closed'}
+                      disabled={!isOwnerOrAdmin && report.status === 'closed'}
                     >
                       <option value="open">Open</option>
                       <option value="in-progress">In Progress</option>
@@ -179,7 +199,7 @@ const Reports = () => {
                       <option value="closed">Closed</option>
                     </select>
                   </td>
-                  {user?.role === 'admin' && (
+                  {isOwnerOrAdmin && (
                     <td className="p-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => handleDelete(report.id)}
@@ -208,21 +228,21 @@ const Reports = () => {
           {selectedReport && (
             <div className="space-y-4 mt-2">
               <div>
-                <h3 className="text-lg font-semibold text-foreground">{selectedReport.title}</h3>
-                <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${typeLabels[selectedReport.type].className}`}>
-                  {typeLabels[selectedReport.type].label}
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground">{selectedReport.title}</h3>
+                  {selectedReport.pdTow && (
+                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-400 flex items-center gap-1">
+                      <Shield className="w-3 h-3" />
+                      PD Tow
+                    </span>
+                  )}
+                </div>
+                <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${typeLabels[selectedReport.type]?.className || 'bg-muted text-muted-foreground'}`}>
+                  {typeLabels[selectedReport.type]?.label || selectedReport.type}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-start gap-2">
-                  <Car className="w-4 h-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Vehicle</p>
-                    <p className="text-sm text-foreground">{selectedReport.vehicle}</p>
-                  </div>
-                </div>
-
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
                   <div>
@@ -232,10 +252,20 @@ const Reports = () => {
                 </div>
 
                 <div className="flex items-start gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Date Created</p>
+                    <p className="text-sm text-foreground">{selectedReport.dateCreated}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
                   <User className="w-4 h-4 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="text-xs text-muted-foreground">Customer Name</p>
-                    <p className="text-sm text-foreground">{selectedReport.customerName}</p>
+                    <p className="text-sm text-foreground">
+                      {selectedReport.pdTow ? <span className="italic text-muted-foreground">PD Tow - N/A</span> : (selectedReport.customerName || 'N/A')}
+                    </p>
                   </div>
                 </div>
 
@@ -244,14 +274,6 @@ const Reports = () => {
                   <div>
                     <p className="text-xs text-muted-foreground">Customer Phone</p>
                     <p className="text-sm text-foreground">{selectedReport.customerPhone || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Date Created</p>
-                    <p className="text-sm text-foreground">{selectedReport.dateCreated}</p>
                   </div>
                 </div>
 

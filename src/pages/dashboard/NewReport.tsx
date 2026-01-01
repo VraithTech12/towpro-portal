@@ -4,40 +4,62 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const NewReport = () => {
   const { user } = useAuth();
   const { addReport } = useData();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
-    type: 'tow' as 'tow' | 'roadside' | 'accident' | 'impound',
+    type: 'tow' as 'tow' | 'roadside' | 'impound',
     location: '',
-    vehicle: '',
+    pdTow: false,
     customerName: '',
     customerPhone: '',
     notes: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.location || !formData.vehicle || !formData.customerName) {
+    // Title and location are always required
+    if (!formData.title || !formData.location) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    addReport({
-      ...formData,
+    // Customer name is required only if NOT a PD tow
+    if (!formData.pdTow && !formData.customerName) {
+      toast.error('Customer name is required for non-PD tows');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    const success = await addReport({
+      title: formData.title,
+      type: formData.type,
+      location: formData.location,
+      pdTow: formData.pdTow,
+      customerName: formData.customerName || undefined,
+      customerPhone: formData.customerPhone || undefined,
+      notes: formData.notes || undefined,
       status: 'open',
-      assignedTo: user?.role === 'employee' ? user.id : undefined,
     });
 
-    toast.success('Report created successfully');
-    navigate('/dashboard/reports');
+    setIsSubmitting(false);
+
+    if (success) {
+      toast.success('Report created successfully');
+      navigate('/dashboard/reports');
+    } else {
+      toast.error('Failed to create report');
+    }
   };
 
   return (
@@ -78,8 +100,7 @@ const NewReport = () => {
               className="w-full h-11 px-4 rounded-lg border border-border bg-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="tow">Tow</option>
-              <option value="roadside">Roadside Assistance</option>
-              <option value="accident">Accident Recovery</option>
+              <option value="roadside">Road Assistance</option>
               <option value="impound">Impound</option>
             </select>
           </div>
@@ -95,20 +116,21 @@ const NewReport = () => {
             />
           </div>
 
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Vehicle <span className="text-destructive">*</span>
-            </label>
-            <Input
-              placeholder="e.g., 2019 Honda Accord (Silver)"
-              value={formData.vehicle}
-              onChange={(e) => setFormData({ ...formData, vehicle: e.target.value })}
+          {/* PD Tow Checkbox */}
+          <div className="col-span-2 flex items-center gap-3 p-4 rounded-lg bg-secondary/50 border border-border">
+            <Checkbox
+              id="pdTow"
+              checked={formData.pdTow}
+              onCheckedChange={(checked) => setFormData({ ...formData, pdTow: checked === true })}
             />
+            <label htmlFor="pdTow" className="text-sm font-medium text-foreground cursor-pointer">
+              PD Tow (Police Department tow - customer info not required)
+            </label>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Customer Name <span className="text-destructive">*</span>
+              Customer Name {!formData.pdTow && <span className="text-destructive">*</span>}
             </label>
             <Input
               placeholder="Full name"
@@ -146,8 +168,12 @@ const NewReport = () => {
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
-          <Button type="submit">
-            <Save className="w-4 h-4" />
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
             Create Report
           </Button>
         </div>

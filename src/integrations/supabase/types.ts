@@ -74,6 +74,54 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          location: string
+          notes: string | null
+          pd_tow: boolean
+          status: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          location: string
+          notes?: string | null
+          pd_tow?: boolean
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          location?: string
+          notes?: string | null
+          pd_tow?: boolean
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
