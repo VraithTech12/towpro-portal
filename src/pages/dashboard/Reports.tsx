@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData, Report } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, FileText, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, Search, FileText, Trash2, MapPin, Phone, User, Car, FileType, Calendar, StickyNote } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Reports = () => {
@@ -13,6 +14,8 @@ const Reports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Filter reports based on role
   const userReports = user?.role === 'admin' 
@@ -40,6 +43,11 @@ const Reports = () => {
     }
     deleteReport(id);
     toast.success('Report deleted');
+  };
+
+  const handleViewReport = (report: Report) => {
+    setSelectedReport(report);
+    setIsDetailOpen(true);
   };
 
   const typeLabels: Record<string, { label: string; className: string }> = {
@@ -139,7 +147,11 @@ const Reports = () => {
             </thead>
             <tbody>
               {filteredReports.map((report) => (
-                <tr key={report.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                <tr 
+                  key={report.id} 
+                  className="border-b border-border/50 hover:bg-secondary/30 transition-colors cursor-pointer"
+                  onClick={() => handleViewReport(report)}
+                >
                   <td className="p-3 text-sm font-medium text-foreground">#{report.id.slice(-4)}</td>
                   <td className="p-3">
                     <div>
@@ -154,7 +166,7 @@ const Reports = () => {
                   </td>
                   <td className="p-3 text-sm text-muted-foreground">{report.customerName}</td>
                   <td className="p-3 text-sm text-muted-foreground">{report.dateCreated}</td>
-                  <td className="p-3">
+                  <td className="p-3" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={report.status}
                       onChange={(e) => handleStatusChange(report.id, e.target.value as Report['status'])}
@@ -168,7 +180,7 @@ const Reports = () => {
                     </select>
                   </td>
                   {user?.role === 'admin' && (
-                    <td className="p-3 text-right">
+                    <td className="p-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => handleDelete(report.id)}
                         className="w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
@@ -183,6 +195,88 @@ const Reports = () => {
           </table>
         </div>
       )}
+
+      {/* Report Detail Dialog */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Report #{selectedReport?.id.slice(-4)}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedReport && (
+            <div className="space-y-4 mt-2">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">{selectedReport.title}</h3>
+                <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${typeLabels[selectedReport.type].className}`}>
+                  {typeLabels[selectedReport.type].label}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-start gap-2">
+                  <Car className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Vehicle</p>
+                    <p className="text-sm text-foreground">{selectedReport.vehicle}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Location</p>
+                    <p className="text-sm text-foreground">{selectedReport.location}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <User className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Customer Name</p>
+                    <p className="text-sm text-foreground">{selectedReport.customerName}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <Phone className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Customer Phone</p>
+                    <p className="text-sm text-foreground">{selectedReport.customerPhone || 'N/A'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Date Created</p>
+                    <p className="text-sm text-foreground">{selectedReport.dateCreated}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <FileType className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <p className="text-sm text-foreground capitalize">{selectedReport.status}</p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedReport.notes && (
+                <div className="flex items-start gap-2 pt-2 border-t border-border">
+                  <StickyNote className="w-4 h-4 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Notes</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{selectedReport.notes}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

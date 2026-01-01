@@ -286,16 +286,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clockOut = async () => {
     if (!user) return;
-
-    const today = new Date().toISOString().split('T')[0];
     
-    // Find the open record
+    // Find any open record (not just today's - handles stale records)
     const { data: openRecord } = await supabase
       .from('clock_records')
       .select('*')
       .eq('user_id', user.id)
-      .eq('date', today)
       .is('clock_out', null)
+      .order('clock_in', { ascending: false })
       .maybeSingle();
 
     if (!openRecord) return;
