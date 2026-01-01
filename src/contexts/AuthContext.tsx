@@ -211,14 +211,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setClockRecords(data || []);
 
-    // Check if clocked in
+    // Check if clocked in (any open record, not just today)
     const today = new Date().toISOString().split('T')[0];
-    const openRecord = data?.find(r => r.date === today && !r.clock_out);
+    const openRecord = data?.find(r => !r.clock_out);
     setIsClockedIn(!!openRecord);
 
-    // Calculate today's hours
-    const todayRecords = data?.filter(r => r.date === today) || [];
-    const totalMinutes = todayRecords.reduce((acc, r) => acc + (r.duration || 0), 0);
+    // Calculate total hours worked (all time, not just today)
+    const totalMinutes = data?.reduce((acc, r) => acc + (r.duration || 0), 0) || 0;
     setTodayHours(totalMinutes / 60);
   };
 
