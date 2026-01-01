@@ -19,7 +19,7 @@ interface StaffMemberEdit {
 }
 
 const Employees = () => {
-  const { role, staff, fetchStaff } = useAuth();
+  const { role, staff, fetchStaff, user, refreshProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -39,6 +39,7 @@ const Employees = () => {
   // Edit form state
   const [editFormData, setEditFormData] = useState({
     name: '',
+    username: '',
     phone: '',
     email: '',
     password: '',
@@ -105,6 +106,7 @@ const Employees = () => {
     setEditingStaff(member);
     setEditFormData({
       name: member.name,
+      username: member.username,
       phone: member.phone || '',
       email: '',
       password: '',
@@ -121,12 +123,14 @@ const Employees = () => {
       const updatePayload: {
         userId: string;
         name: string;
+        username: string;
         phone: string;
         email?: string;
         password?: string;
       } = {
         userId: editingStaff.user_id,
         name: editFormData.name,
+        username: editFormData.username,
         phone: editFormData.phone,
       };
 
@@ -142,6 +146,8 @@ const Employees = () => {
         body: updatePayload,
       });
 
+      const isEditingSelf = editingStaff.user_id === user?.id;
+
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
@@ -149,6 +155,11 @@ const Employees = () => {
       setIsEditOpen(false);
       setEditingStaff(null);
       await fetchStaff();
+      
+      // If editing own profile, refresh it to update header
+      if (isEditingSelf) {
+        await refreshProfile();
+      }
     } catch (error: any) {
       console.error('Error updating staff:', error);
       toast.error(error.message || 'Failed to update staff member');
@@ -413,6 +424,16 @@ const Employees = () => {
                 value={editFormData.name}
                 onChange={(e) => handleEditInputChange('name', e.target.value)}
                 placeholder="John Doe"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-username">Username</Label>
+              <Input
+                id="edit-username"
+                value={editFormData.username}
+                onChange={(e) => handleEditInputChange('username', e.target.value)}
+                placeholder="johndoe"
                 required
               />
             </div>
