@@ -49,6 +49,7 @@ interface AuthContextType {
   clockOut: () => Promise<void>;
   isClockedIn: boolean;
   todayHours: number;
+  weeklyHours: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [clockRecords, setClockRecords] = useState<ClockRecord[]>([]);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [todayHours, setTodayHours] = useState(0);
+  const [weeklyHours, setWeeklyHours] = useState(0);
 
   useEffect(() => {
     // Set up auth state listener
@@ -197,6 +199,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setClockRecords(data || []);
   };
 
+  // Helper function to get the start of the current week (Monday)
+  const getWeekStartDate = () => {
+    const now = new Date();
+    const day = now.getDay();
+    // If Sunday (0), go back 6 days; otherwise go back (day - 1) days
+    const daysToSubtract = day === 0 ? 6 : day - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - daysToSubtract);
+    monday.setHours(0, 0, 0, 0);
+    return monday.toISOString().split('T')[0];
+  };
+
   const fetchUserClockRecords = async (userId: string) => {
     const { data, error } = await supabase
       .from('clock_records')
@@ -211,14 +225,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setClockRecords(data || []);
 
-    // Check if clocked in (any open record, not just today)
-    const today = new Date().toISOString().split('T')[0];
+    // Check if clocked in (any open record)
     const openRecord = data?.find(r => !r.clock_out);
     setIsClockedIn(!!openRecord);
 
-    // Calculate total hours worked (all time, not just today)
-    const totalMinutes = data?.reduce((acc, r) => acc + (r.duration || 0), 0) || 0;
-    setTodayHours(totalMinutes / 60);
+    // Calculate today's hours
+    const today = new Date().toISOString().split('T')[0];
+    const todayRecords = data?.filter(r => r.date === today) || [];
+    const todayMinutes = todayRecords.reduce((acc, r) => acc + (r.duration || 0), 0);
+    setTodayHours(todayMinutes / 60);
+
+    // Calculate weekly hours (Monday to Sunday)
+    const weekStart = getWeekStartDate();
+    const weekRecords = data?.filter(r => r.date >= weekStart) || [];
+    const weekMinutes = weekRecords.reduce((acc, r) => acc + (r.duration || 0), 0);
+    setWeeklyHours(weekMinutes / 60);
   };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -318,6 +339,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clockOut,
       isClockedIn,
       todayHours,
+      weeklyHours,
     }}>
       {children}
     </AuthContext.Provider>
