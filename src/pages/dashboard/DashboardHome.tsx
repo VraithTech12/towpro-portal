@@ -7,7 +7,7 @@ import { Plus, FileText, Truck, Wrench, ArrowRight, Clock, PlayCircle, StopCircl
 import { formatDistanceToNow } from 'date-fns';
 
 const DashboardHome = () => {
-  const { profile, role, staff, clockIn, clockOut, isClockedIn, todayHours, clockRecords, user } = useAuth();
+  const { profile, role, staff, clockIn, clockOut, isClockedIn, todayHours, weeklyHours, clockRecords, user } = useAuth();
   const { reports, towUnits } = useData();
   const { onlineCount } = useOnlinePresence();
 
@@ -90,7 +90,7 @@ const DashboardHome = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className={`grid gap-4 ${isOwnerOrAdmin ? 'grid-cols-4' : 'grid-cols-2'}`}>
+      <div className={`grid gap-4 ${isOwnerOrAdmin ? 'grid-cols-5' : 'grid-cols-3'}`}>
         <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors">
           <div className="flex items-center justify-between mb-3">
             <FileText className="w-5 h-5 text-primary" />
@@ -107,6 +107,15 @@ const DashboardHome = () => {
           </div>
           <p className="text-3xl font-bold text-foreground">{clockedInCount}</p>
           <p className="text-sm text-muted-foreground mt-1">Clocked In</p>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-5 hover:border-amber-500/30 transition-colors">
+          <div className="flex items-center justify-between mb-3">
+            <Clock className="w-5 h-5 text-amber-500" />
+            <span className="text-xs font-medium px-2 py-1 rounded-full bg-amber-500/10 text-amber-500">Weekly</span>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{weeklyHours.toFixed(1)}h</p>
+          <p className="text-sm text-muted-foreground mt-1">This Week</p>
         </div>
 
         {isOwnerOrAdmin && (
