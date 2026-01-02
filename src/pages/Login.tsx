@@ -158,7 +158,7 @@ const Login = () => {
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
-            Contact your administrator if you need access.
+            Contact the owner via Discord: <span className="text-primary font-medium">@iamvraith</span>
           </p>
         </div>
       </div>
