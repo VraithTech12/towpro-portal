@@ -9,10 +9,26 @@ import { Progress } from '@/components/ui/progress';
 import { FileText, ArrowLeft, Loader2, CheckCircle, Copy, User, MessageSquare, Clock, MapPin, Truck, Shield, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+// Input validation schema
+const applicationSchema = z.object({
+  characterName: z.string().trim().min(2, 'Character name must be at least 2 characters').max(50, 'Character name must be less than 50 characters'),
+  discordName: z.string().trim().min(2, 'Discord name must be at least 2 characters').max(50, 'Discord name must be less than 50 characters'),
+  timezone: z.enum(['EU', 'NA', 'AU', 'Other'], { required_error: 'Please select a timezone' }),
+  hoursPerWeek: z.enum(['1-5', '5-10', '10-20', '20+'], { required_error: 'Please select hours per week' }),
+  whyJoin: z.string().trim().min(20, 'Please provide at least 20 characters').max(2000, 'Response must be less than 2000 characters'),
+  experience: z.string().trim().min(20, 'Please provide at least 20 characters').max(2000, 'Response must be less than 2000 characters'),
+  scenarioVehicleBreakdown: z.string().trim().min(20, 'Please provide at least 20 characters').max(2000, 'Response must be less than 2000 characters'),
+  scenarioDifficultCustomer: z.string().trim().min(20, 'Please provide at least 20 characters').max(2000, 'Response must be less than 2000 characters'),
+  scenarioEnhanceRoleplay: z.string().trim().min(20, 'Please provide at least 20 characters').max(2000, 'Response must be less than 2000 characters'),
+  ruleBreakResponse: z.enum(['report', 'ignore', 'confront', 'leave'], { required_error: 'Please select a response' }),
+});
 
 const Apply = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     characterName: '',
     discordName: '',
@@ -28,6 +44,10 @@ const Apply = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const completionPercentage = useMemo(() => {
@@ -38,22 +58,40 @@ const Apply = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    
+    // Validate all inputs
+    const result = applicationSchema.safeParse(formData);
+    
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error('Please fix the errors in the form');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      const validData = result.data;
       const { data, error } = await supabase
         .from('applications')
         .insert({
-          character_name: formData.characterName,
-          discord_name: formData.discordName,
-          timezone: formData.timezone,
-          hours_per_week: formData.hoursPerWeek,
-          why_join: formData.whyJoin,
-          experience: formData.experience,
-          scenario_vehicle_breakdown: formData.scenarioVehicleBreakdown,
-          scenario_difficult_customer: formData.scenarioDifficultCustomer,
-          scenario_enhance_roleplay: formData.scenarioEnhanceRoleplay,
-          rule_break_response: formData.ruleBreakResponse,
+          character_name: validData.characterName,
+          discord_name: validData.discordName,
+          timezone: validData.timezone,
+          hours_per_week: validData.hoursPerWeek,
+          why_join: validData.whyJoin,
+          experience: validData.experience,
+          scenario_vehicle_breakdown: validData.scenarioVehicleBreakdown,
+          scenario_difficult_customer: validData.scenarioDifficultCustomer,
+          scenario_enhance_roleplay: validData.scenarioEnhanceRoleplay,
+          rule_break_response: validData.ruleBreakResponse,
         })
         .select('application_id')
         .single();
@@ -63,8 +101,8 @@ const Apply = () => {
       setApplicationId(data.application_id);
       toast.success('Application submitted successfully!');
     } catch (error: any) {
-      console.error('Error submitting application:', error);
-      toast.error(error.message || 'Failed to submit application');
+      console.error('Error submitting application');
+      toast.error('Failed to submit application. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -190,9 +228,11 @@ const Apply = () => {
                       value={formData.characterName}
                       onChange={(e) => handleInputChange('characterName', e.target.value)}
                       placeholder="Enter your character name"
-                      className="h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+                      maxLength={50}
+                      className={`h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors ${errors.characterName ? 'border-destructive' : ''}`}
                       required
                     />
+                    {errors.characterName && <p className="text-xs text-destructive">{errors.characterName}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -202,9 +242,11 @@ const Apply = () => {
                       value={formData.discordName}
                       onChange={(e) => handleInputChange('discordName', e.target.value)}
                       placeholder="Your Discord username"
-                      className="h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+                      maxLength={50}
+                      className={`h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors ${errors.discordName ? 'border-destructive' : ''}`}
                       required
                     />
+                    {errors.discordName && <p className="text-xs text-destructive">{errors.discordName}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -213,7 +255,7 @@ const Apply = () => {
                       Active Timezone
                     </Label>
                     <Select value={formData.timezone} onValueChange={(value) => handleInputChange('timezone', value)} required>
-                      <SelectTrigger className="h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors">
+                      <SelectTrigger className={`h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors ${errors.timezone ? 'border-destructive' : ''}`}>
                         <SelectValue placeholder="Select your timezone" />
                       </SelectTrigger>
                       <SelectContent>
@@ -223,6 +265,7 @@ const Apply = () => {
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.timezone && <p className="text-xs text-destructive">{errors.timezone}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -231,7 +274,7 @@ const Apply = () => {
                       Weekly Availability
                     </Label>
                     <Select value={formData.hoursPerWeek} onValueChange={(value) => handleInputChange('hoursPerWeek', value)} required>
-                      <SelectTrigger className="h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors">
+                      <SelectTrigger className={`h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors ${errors.hoursPerWeek ? 'border-destructive' : ''}`}>
                         <SelectValue placeholder="Hours per week" />
                       </SelectTrigger>
                       <SelectContent>
@@ -241,6 +284,7 @@ const Apply = () => {
                         <SelectItem value="20+">20+ hours</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.hoursPerWeek && <p className="text-xs text-destructive">{errors.hoursPerWeek}</p>}
                   </div>
                 </div>
               </div>
@@ -264,9 +308,11 @@ const Apply = () => {
                       value={formData.whyJoin}
                       onChange={(e) => handleInputChange('whyJoin', e.target.value)}
                       placeholder="Tell us what motivates you to join our team..."
-                      className="min-h-[120px] bg-background/50 border-border/50 focus:border-primary/50 transition-colors resize-none"
+                      maxLength={2000}
+                      className={`min-h-[120px] bg-background/50 border-border/50 focus:border-primary/50 transition-colors resize-none ${errors.whyJoin ? 'border-destructive' : ''}`}
                       required
                     />
+                    {errors.whyJoin && <p className="text-xs text-destructive">{errors.whyJoin}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -278,9 +324,11 @@ const Apply = () => {
                       value={formData.experience}
                       onChange={(e) => handleInputChange('experience', e.target.value)}
                       placeholder="Describe your relevant experience..."
-                      className="min-h-[120px] bg-background/50 border-border/50 focus:border-primary/50 transition-colors resize-none"
+                      maxLength={2000}
+                      className={`min-h-[120px] bg-background/50 border-border/50 focus:border-primary/50 transition-colors resize-none ${errors.experience ? 'border-destructive' : ''}`}
                       required
                     />
+                    {errors.experience && <p className="text-xs text-destructive">{errors.experience}</p>}
                   </div>
                 </div>
               </div>
@@ -304,9 +352,11 @@ const Apply = () => {
                       value={formData.scenarioVehicleBreakdown}
                       onChange={(e) => handleInputChange('scenarioVehicleBreakdown', e.target.value)}
                       placeholder="Describe how you would handle this situation..."
-                      className="min-h-[100px] bg-background/80 border-border/50 focus:border-primary/50 transition-colors resize-none"
+                      maxLength={2000}
+                      className={`min-h-[100px] bg-background/80 border-border/50 focus:border-primary/50 transition-colors resize-none ${errors.scenarioVehicleBreakdown ? 'border-destructive' : ''}`}
                       required
                     />
+                    {errors.scenarioVehicleBreakdown && <p className="text-xs text-destructive">{errors.scenarioVehicleBreakdown}</p>}
                   </div>
 
                   <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-border/30">
@@ -318,9 +368,11 @@ const Apply = () => {
                       value={formData.scenarioDifficultCustomer}
                       onChange={(e) => handleInputChange('scenarioDifficultCustomer', e.target.value)}
                       placeholder="Describe how you would de-escalate this situation..."
-                      className="min-h-[100px] bg-background/80 border-border/50 focus:border-primary/50 transition-colors resize-none"
+                      maxLength={2000}
+                      className={`min-h-[100px] bg-background/80 border-border/50 focus:border-primary/50 transition-colors resize-none ${errors.scenarioDifficultCustomer ? 'border-destructive' : ''}`}
                       required
                     />
+                    {errors.scenarioDifficultCustomer && <p className="text-xs text-destructive">{errors.scenarioDifficultCustomer}</p>}
                   </div>
 
                   <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-border/30">
@@ -332,9 +384,11 @@ const Apply = () => {
                       value={formData.scenarioEnhanceRoleplay}
                       onChange={(e) => handleInputChange('scenarioEnhanceRoleplay', e.target.value)}
                       placeholder="Share your roleplay experience..."
-                      className="min-h-[100px] bg-background/80 border-border/50 focus:border-primary/50 transition-colors resize-none"
+                      maxLength={2000}
+                      className={`min-h-[100px] bg-background/80 border-border/50 focus:border-primary/50 transition-colors resize-none ${errors.scenarioEnhanceRoleplay ? 'border-destructive' : ''}`}
                       required
                     />
+                    {errors.scenarioEnhanceRoleplay && <p className="text-xs text-destructive">{errors.scenarioEnhanceRoleplay}</p>}
                   </div>
                 </div>
               </div>
@@ -353,7 +407,7 @@ const Apply = () => {
                     A player has broken a server rule in front of you, what do you do?
                   </Label>
                   <Select value={formData.ruleBreakResponse} onValueChange={(value) => handleInputChange('ruleBreakResponse', value)} required>
-                    <SelectTrigger className="h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors">
+                    <SelectTrigger className={`h-12 bg-background/50 border-border/50 focus:border-primary/50 transition-colors ${errors.ruleBreakResponse ? 'border-destructive' : ''}`}>
                       <SelectValue placeholder="Select your response" />
                     </SelectTrigger>
                     <SelectContent>
@@ -363,6 +417,7 @@ const Apply = () => {
                       <SelectItem value="leave">Leave the situation</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.ruleBreakResponse && <p className="text-xs text-destructive">{errors.ruleBreakResponse}</p>}
                 </div>
               </div>
 
