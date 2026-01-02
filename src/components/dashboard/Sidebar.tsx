@@ -10,7 +10,6 @@ import {
   BarChart3,
   ClipboardList
 } from 'lucide-react';
-import apexLogo from '@/assets/apex-logo.png';
 
 const Sidebar = () => {
   const { profile, role, logout } = useAuth();
@@ -33,12 +32,6 @@ const Sidebar = () => {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-16 bg-card border-r border-border flex flex-col items-center py-4 z-50">
-      {/* Logo */}
-      <div className="mb-6">
-        <div className="w-10 h-10 rounded-lg overflow-hidden border border-primary/20">
-          <img src={apexLogo} alt="Apex Towing" className="w-full h-full object-cover" />
-        </div>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-1">
