@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Search, ArrowLeft, Loader2, Clock, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import apexLogo from '@/assets/apex-logo.png';
+
 
 interface ApplicationStatus {
   application_id: string;
@@ -78,7 +78,7 @@ const CheckStatus = () => {
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
-          <img src={apexLogo} alt="Apex Towing" className="h-10 mx-auto" />
+          
           <Search className="w-12 h-12 text-primary mx-auto" />
           <h1 className="text-2xl font-bold text-foreground">Check Application Status</h1>
           <p className="text-muted-foreground">
