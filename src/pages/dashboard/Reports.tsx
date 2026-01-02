@@ -65,6 +65,7 @@ const Reports = () => {
     tow: { label: 'Tow', className: 'bg-blue-500/20 text-blue-400' },
     roadside: { label: 'Road Assistance', className: 'bg-green-500/20 text-green-400' },
     impound: { label: 'Impound', className: 'bg-purple-500/20 text-purple-400' },
+    pd_tow: { label: 'PD Tow', className: 'bg-amber-500/20 text-amber-400' },
   };
 
   return (
@@ -106,6 +107,7 @@ const Reports = () => {
             <option value="tow">Tow</option>
             <option value="roadside">Road Assistance</option>
             <option value="impound">Impound</option>
+            <option value="pd_tow">PD Tow</option>
           </select>
 
           <select
@@ -115,8 +117,7 @@ const Reports = () => {
           >
             <option value="all">All Status</option>
             <option value="open">Open</option>
-            <option value="in-progress">In Progress</option>
-            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
             <option value="closed">Closed</option>
           </select>
         </div>
@@ -168,14 +169,7 @@ const Reports = () => {
                 >
                   <td className="p-3 text-sm font-medium text-foreground">#{report.id.slice(-4)}</td>
                   <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-foreground">{report.title}</p>
-                      {report.pdTow && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-400">
-                          PD
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-sm text-foreground">{report.title}</p>
                   </td>
                   <td className="p-3">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${typeLabels[report.type]?.className || 'bg-muted text-muted-foreground'}`}>
@@ -183,7 +177,7 @@ const Reports = () => {
                     </span>
                   </td>
                   <td className="p-3 text-sm text-muted-foreground">
-                    {report.pdTow ? <span className="italic">PD Tow</span> : report.customerName || 'N/A'}
+                    {report.type === 'pd_tow' ? <span className="italic">PD Tow</span> : report.customerName || 'N/A'}
                   </td>
                   <td className="p-3 text-sm text-muted-foreground">{report.dateCreated}</td>
                   <td className="p-3" onClick={(e) => e.stopPropagation()}>
@@ -194,8 +188,7 @@ const Reports = () => {
                       disabled={!isOwnerOrAdmin && report.status === 'closed'}
                     >
                       <option value="open">Open</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="pending">Pending</option>
+                      <option value="in_progress">In Progress</option>
                       <option value="closed">Closed</option>
                     </select>
                   </td>
@@ -230,7 +223,7 @@ const Reports = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-foreground">{selectedReport.title}</h3>
-                  {selectedReport.pdTow && (
+                  {selectedReport.type === 'pd_tow' && (
                     <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-400 flex items-center gap-1">
                       <Shield className="w-3 h-3" />
                       PD Tow
@@ -264,7 +257,7 @@ const Reports = () => {
                   <div>
                     <p className="text-xs text-muted-foreground">Customer Name</p>
                     <p className="text-sm text-foreground">
-                      {selectedReport.pdTow ? <span className="italic text-muted-foreground">PD Tow - N/A</span> : (selectedReport.customerName || 'N/A')}
+                      {selectedReport.type === 'pd_tow' ? <span className="italic text-muted-foreground">PD Tow - N/A</span> : (selectedReport.customerName || 'N/A')}
                     </p>
                   </div>
                 </div>
@@ -281,9 +274,19 @@ const Reports = () => {
                   <FileType className="w-4 h-4 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="text-xs text-muted-foreground">Status</p>
-                    <p className="text-sm text-foreground capitalize">{selectedReport.status}</p>
+                    <p className="text-sm text-foreground capitalize">{selectedReport.status.replace('_', ' ')}</p>
                   </div>
                 </div>
+
+                {selectedReport.dueDate && (
+                  <div className="flex items-start gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Due Date</p>
+                      <p className="text-sm text-foreground">{selectedReport.dueDate}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {selectedReport.notes && (
@@ -293,6 +296,19 @@ const Reports = () => {
                     <p className="text-xs text-muted-foreground">Notes</p>
                     <p className="text-sm text-foreground whitespace-pre-wrap">{selectedReport.notes}</p>
                   </div>
+                </div>
+              )}
+
+              {isOwnerOrAdmin && (
+                <div className="flex justify-end pt-2 border-t border-border">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(selectedReport.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Report
+                  </Button>
                 </div>
               )}
             </div>

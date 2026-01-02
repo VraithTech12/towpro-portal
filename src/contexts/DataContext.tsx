@@ -5,11 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface Report {
   id: string;
   title: string;
-  type: 'tow' | 'roadside' | 'impound';
-  status: 'open' | 'closed' | 'in-progress' | 'pending';
+  type: 'tow' | 'roadside' | 'impound' | 'pd_tow';
+  status: 'open' | 'closed' | 'in_progress';
   dateCreated: string;
+  dueDate?: string;
   location: string;
-  pdTow: boolean;
   customerName?: string;
   customerPhone?: string;
   assignedTo?: string;
@@ -67,11 +67,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const mappedReports: Report[] = (data || []).map((r: any) => ({
         id: r.id,
         title: r.title,
-        type: r.type as 'tow' | 'roadside' | 'impound',
-        status: r.status as 'open' | 'closed' | 'in-progress' | 'pending',
+        type: r.type as 'tow' | 'roadside' | 'impound' | 'pd_tow',
+        status: r.status as 'open' | 'closed' | 'in_progress',
         dateCreated: new Date(r.created_at).toLocaleDateString('en-US'),
+        dueDate: r.due_date ? new Date(r.due_date).toLocaleDateString('en-US') : undefined,
         location: r.location,
-        pdTow: r.pd_tow || false,
         customerName: r.customer_name || undefined,
         customerPhone: r.customer_phone || undefined,
         assignedTo: r.assigned_to || undefined,
@@ -102,11 +102,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         title: report.title,
         type: report.type,
         location: report.location,
-        pd_tow: report.pdTow,
         customer_name: report.customerName || null,
         customer_phone: report.customerPhone || null,
         notes: report.notes || null,
         status: report.status || 'open',
+        due_date: report.dueDate || null,
       })
       .select()
       .single();
@@ -127,11 +127,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (updates.type !== undefined) dbUpdates.type = updates.type;
     if (updates.status !== undefined) dbUpdates.status = updates.status;
     if (updates.location !== undefined) dbUpdates.location = updates.location;
-    if (updates.pdTow !== undefined) dbUpdates.pd_tow = updates.pdTow;
     if (updates.customerName !== undefined) dbUpdates.customer_name = updates.customerName;
     if (updates.customerPhone !== undefined) dbUpdates.customer_phone = updates.customerPhone;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
     if (updates.assignedTo !== undefined) dbUpdates.assigned_to = updates.assignedTo;
+    if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
 
     const { error } = await supabase
       .from('reports')

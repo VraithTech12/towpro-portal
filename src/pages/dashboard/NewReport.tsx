@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Calendar, MapPin, Users, FileText, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const NewReport = () => {
   const { user } = useAuth();
@@ -16,25 +16,31 @@ const NewReport = () => {
 
   const [formData, setFormData] = useState({
     title: '',
-    type: 'tow' as 'tow' | 'roadside' | 'impound',
+    type: 'tow' as 'tow' | 'roadside' | 'impound' | 'pd_tow',
     location: '',
-    pdTow: false,
     customerName: '',
     customerPhone: '',
     notes: '',
+    dueDate: '',
   });
+
+  const reportTypes = [
+    { value: 'tow', label: 'Tow' },
+    { value: 'roadside', label: 'Road Assistance' },
+    { value: 'impound', label: 'Impound' },
+    { value: 'pd_tow', label: 'PD Tow' },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Title and location are always required
     if (!formData.title || !formData.location) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     // Customer name is required only if NOT a PD tow
-    if (!formData.pdTow && !formData.customerName) {
+    if (formData.type !== 'pd_tow' && !formData.customerName) {
       toast.error('Customer name is required for non-PD tows');
       return;
     }
@@ -45,10 +51,10 @@ const NewReport = () => {
       title: formData.title,
       type: formData.type,
       location: formData.location,
-      pdTow: formData.pdTow,
       customerName: formData.customerName || undefined,
       customerPhone: formData.customerPhone || undefined,
       notes: formData.notes || undefined,
+      dueDate: formData.dueDate || undefined,
       status: 'open',
     });
 
@@ -62,8 +68,13 @@ const NewReport = () => {
     }
   };
 
+  const currentDate = new Date();
+  const formattedDate = format(currentDate, 'EEEE, MMMM do, yyyy');
+  const formattedTime = format(currentDate, 'h:mm a');
+
   return (
-    <div className="max-w-2xl animate-fade-in">
+    <div className="max-w-4xl animate-fade-in">
+      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button 
           onClick={() => navigate(-1)}
@@ -77,94 +88,132 @@ const NewReport = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-6 space-y-5">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Title <span className="text-destructive">*</span>
-            </label>
-            <Input
-              placeholder="e.g., Vehicle breakdown on Highway 95"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Main Report Card */}
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          {/* Report Header with Title Input */}
+          <div className="p-6 border-b border-border">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Enter report title..."
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="text-lg font-semibold bg-transparent border-none p-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/50"
+                />
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{formattedTime}</span>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">{formattedDate}</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Type <span className="text-destructive">*</span>
-            </label>
-            <select
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-              className="w-full h-11 px-4 rounded-lg border border-border bg-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="tow">Tow</option>
-              <option value="roadside">Road Assistance</option>
-              <option value="impound">Impound</option>
-            </select>
-          </div>
+          {/* Report Details Grid */}
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Report Type */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                Report Type <span className="text-destructive">*</span>
+              </label>
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                className="w-full h-11 px-4 rounded-lg border border-border bg-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                {reportTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Location <span className="text-destructive">*</span>
-            </label>
-            <Input
-              placeholder="Enter address or location"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            />
-          </div>
+            {/* Due Date */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                Due Date
+              </label>
+              <Input
+                type="datetime-local"
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                className="h-11"
+              />
+            </div>
 
-          {/* PD Tow Checkbox */}
-          <div className="col-span-2 flex items-center gap-3 p-4 rounded-lg bg-secondary/50 border border-border">
-            <Checkbox
-              id="pdTow"
-              checked={formData.pdTow}
-              onCheckedChange={(checked) => setFormData({ ...formData, pdTow: checked === true })}
-            />
-            <label htmlFor="pdTow" className="text-sm font-medium text-foreground cursor-pointer">
-              PD Tow (Police Department tow - customer info not required)
-            </label>
-          </div>
+            {/* Location */}
+            <div className="space-y-2 md:col-span-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                Location <span className="text-destructive">*</span>
+              </label>
+              <Input
+                placeholder="Enter address or location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                className="h-11"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Customer Name {!formData.pdTow && <span className="text-destructive">*</span>}
-            </label>
-            <Input
-              placeholder="Full name"
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-            />
-          </div>
+            {/* Customer Name */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                Customer Name {formData.type !== 'pd_tow' && <span className="text-destructive">*</span>}
+              </label>
+              <Input
+                placeholder="Full name"
+                value={formData.customerName}
+                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                className="h-11"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Customer Phone
-            </label>
-            <Input
-              placeholder="(555) 123-4567"
-              value={formData.customerPhone}
-              onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-            />
-          </div>
-
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Notes
-            </label>
-            <textarea
-              placeholder="Additional details..."
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              className="w-full px-4 py-3 rounded-lg border border-border bg-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            />
+            {/* Customer Phone */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                Customer Phone
+              </label>
+              <Input
+                placeholder="(555) 123-4567"
+                value={formData.customerPhone}
+                onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                className="h-11"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-2">
+        {/* Workers Assigned Section */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-5 h-5 text-muted-foreground" />
+            <h2 className="text-base font-semibold text-foreground">Workers Assigned</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            No workers assigned yet. Workers can be assigned after creating the report.
+          </p>
+        </div>
+
+        {/* Notes Section */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <label className="block text-sm font-medium text-foreground mb-3">
+            Notes
+          </label>
+          <textarea
+            placeholder="Additional details..."
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            rows={4}
+            className="w-full px-4 py-3 rounded-lg border border-border bg-input text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>

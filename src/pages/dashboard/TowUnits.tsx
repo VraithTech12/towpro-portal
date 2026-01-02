@@ -7,7 +7,7 @@ import { Plus, Search, Truck, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TowUnits = () => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { towUnits, addTowUnit, updateTowUnit, deleteTowUnit } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -48,8 +48,8 @@ const TowUnits = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (user?.role !== 'admin') {
-      toast.error('Only admins can delete units');
+    if (role !== 'admin' && role !== 'owner') {
+      toast.error('Only admins and owners can delete units');
       return;
     }
     deleteTowUnit(id);
@@ -70,12 +70,19 @@ const TowUnits = () => {
           <h1 className="text-xl font-semibold text-foreground">Tow Units</h1>
           <p className="text-sm text-muted-foreground">Manage your fleet</p>
         </div>
-        {user?.role === 'admin' && (
+        {(role === 'admin' || role === 'owner') && (
           <Button onClick={() => setShowAddForm(true)}>
             <Plus className="w-4 h-4" />
             Add Unit
           </Button>
         )}
+      </div>
+
+      {/* Information Notice */}
+      <div className="bg-secondary/50 border border-border rounded-xl p-4">
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground">Note for Employees:</strong> If you have purchased a tow vehicle from a dealership, you must notify an admin or owner. Once given permission, you can add the necessary information to this section, including the license plate, owner name, and payment status (loan or fully paid).
+        </p>
       </div>
 
       {/* Add Form Modal */}
