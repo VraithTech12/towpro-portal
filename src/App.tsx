@@ -7,6 +7,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Apply from "./pages/Apply";
+import CheckStatus from "./pages/CheckStatus";
 import NotFound from "./pages/NotFound";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
@@ -31,6 +33,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/apply" element={<Apply />} />
+              <Route path="/check-status" element={<CheckStatus />} />
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardHome />} />
                 <Route path="reports" element={<Reports />} />
