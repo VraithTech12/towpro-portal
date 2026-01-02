@@ -107,6 +107,48 @@ export type Database = {
         }
         Relationships: []
       }
+      company_settings: {
+        Row: {
+          address: string | null
+          company_name: string
+          created_at: string
+          email: string | null
+          id: string
+          notify_daily_reports: boolean
+          notify_job_status: boolean
+          notify_new_jobs: boolean
+          notify_unit_availability: boolean
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          notify_daily_reports?: boolean
+          notify_job_status?: boolean
+          notify_new_jobs?: boolean
+          notify_unit_availability?: boolean
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          notify_daily_reports?: boolean
+          notify_job_status?: boolean
+          notify_new_jobs?: boolean
+          notify_unit_availability?: boolean
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
