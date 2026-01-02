@@ -128,55 +128,95 @@ const CheckStatus = () => {
         )}
 
         {application && (
-          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-            <div className="text-center space-y-2">
-              {getStatusIcon(application.status)}
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusLabel(application.status).className}`}>
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            {/* Status Header */}
+            <div className={`p-6 text-center ${
+              application.status === 'approved' 
+                ? 'bg-gradient-to-br from-emerald-500/20 to-emerald-600/10' 
+                : application.status === 'denied'
+                ? 'bg-gradient-to-br from-red-500/20 to-red-600/10'
+                : 'bg-gradient-to-br from-amber-500/20 to-amber-600/10'
+            }`}>
+              <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
+                application.status === 'approved'
+                  ? 'bg-emerald-500/20 ring-2 ring-emerald-500/30'
+                  : application.status === 'denied'
+                  ? 'bg-red-500/20 ring-2 ring-red-500/30'
+                  : 'bg-amber-500/20 ring-2 ring-amber-500/30'
+              }`}>
+                {getStatusIcon(application.status)}
+              </div>
+              <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold ${getStatusLabel(application.status).className} border ${
+                application.status === 'approved'
+                  ? 'border-emerald-500/30'
+                  : application.status === 'denied'
+                  ? 'border-red-500/30'
+                  : 'border-amber-500/30'
+              }`}>
                 {getStatusLabel(application.status).label}
               </span>
             </div>
 
-            <div className="space-y-3 pt-4 border-t border-border">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Application ID</span>
-                <span className="text-sm font-medium text-foreground">{application.application_id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Character Name</span>
-                <span className="text-sm font-medium text-foreground">{application.character_name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Submitted</span>
-                <span className="text-sm font-medium text-foreground">
-                  {new Date(application.created_at).toLocaleDateString()}
-                </span>
-              </div>
-              {application.reviewed_at && (
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Reviewed</span>
+            {/* Application Details */}
+            <div className="p-6 space-y-4">
+              <div className="grid gap-3">
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-sm text-muted-foreground">Application ID</span>
+                  <span className="text-sm font-mono font-semibold text-primary">{application.application_id}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-sm text-muted-foreground">Character Name</span>
+                  <span className="text-sm font-medium text-foreground">{application.character_name}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-muted-foreground">Submitted</span>
                   <span className="text-sm font-medium text-foreground">
-                    {new Date(application.reviewed_at).toLocaleDateString()}
+                    {new Date(application.created_at).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
                   </span>
+                </div>
+                {application.reviewed_at && (
+                  <div className="flex justify-between items-center py-2 border-t border-border/50">
+                    <span className="text-sm text-muted-foreground">Reviewed</span>
+                    <span className="text-sm font-medium text-foreground">
+                      {new Date(application.reviewed_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {application.reviewer_notes && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 font-medium">Reviewer Notes</p>
+                  <p className="text-sm text-foreground bg-secondary/50 rounded-lg p-4 border border-border/50">
+                    {application.reviewer_notes}
+                  </p>
+                </div>
+              )}
+
+              {application.status === 'approved' && (
+                <div className="mt-4 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <p className="text-sm text-emerald-400 text-center font-medium">
+                    🎉 Congratulations! Please check your Discord for next steps.
+                  </p>
+                </div>
+              )}
+
+              {application.status === 'denied' && (
+                <div className="mt-4 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <p className="text-sm text-red-400 text-center">
+                    Unfortunately, your application was not approved at this time.
+                  </p>
                 </div>
               )}
             </div>
-
-            {application.reviewer_notes && (
-              <div className="pt-4 border-t border-border">
-                <p className="text-sm text-muted-foreground mb-2">Reviewer Notes</p>
-                <p className="text-sm text-foreground bg-secondary/50 rounded p-3">
-                  {application.reviewer_notes}
-                </p>
-              </div>
-            )}
-
-            {application.status === 'approved' && (
-              <div className="pt-4 border-t border-border">
-                <p className="text-sm text-success text-center">
-                  Congratulations! Please check your Discord for next steps.
-                </p>
-              </div>
-            )}
           </div>
         )}
 
