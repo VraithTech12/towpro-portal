@@ -67,24 +67,6 @@ const Login = () => {
             <p className="text-muted-foreground mt-2 text-sm">Operations Portal</p>
           </div>
 
-          {/* Application Options */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <Link to="/check-status" className="block">
-              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
-                <Search className="w-6 h-6 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold text-foreground text-sm">Check Application Status</h3>
-                <p className="text-xs text-primary mt-1">Check Status</p>
-              </div>
-            </Link>
-            <Link to="/apply" className="block">
-              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
-                <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold text-foreground text-sm">Want to join?</h3>
-                <p className="text-xs text-primary mt-1">Submit Application</p>
-              </div>
-            </Link>
-          </div>
-
           {/* Login Card */}
           <div className="bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl p-8 shadow-2xl">
             <div className="mb-6">
@@ -155,6 +137,24 @@ const Login = () => {
                 )}
               </Button>
             </form>
+          </div>
+
+          {/* Application Options */}
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <Link to="/check-status" className="block">
+              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
+                <Search className="w-6 h-6 text-primary mx-auto mb-2" />
+                <h3 className="font-semibold text-foreground text-sm">Check Application Status</h3>
+                <p className="text-xs text-primary mt-1">Check Status</p>
+              </div>
+            </Link>
+            <Link to="/apply" className="block">
+              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
+                <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
+                <h3 className="font-semibold text-foreground text-sm">Want to join?</h3>
+                <p className="text-xs text-primary mt-1">Submit Application</p>
+              </div>
+            </Link>
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
