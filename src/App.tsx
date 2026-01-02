@@ -7,6 +7,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Apply from "./pages/Apply";
 import CheckStatus from "./pages/CheckStatus";
 import NotFound from "./pages/NotFound";
@@ -34,6 +36,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/apply" element={<Apply />} />
               <Route path="/check-status" element={<CheckStatus />} />
               <Route path="/dashboard" element={<DashboardLayout />}>
