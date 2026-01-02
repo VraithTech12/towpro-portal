@@ -29,23 +29,32 @@ const CheckStatus = () => {
     setNotFound(false);
     setApplication(null);
 
+    // Client-side validation
+    const sanitizedId = applicationId.toUpperCase().trim();
+    const validIdPattern = /^TOW[A-F0-9]{8}$/;
+    
+    if (!validIdPattern.test(sanitizedId)) {
+      toast.error('Invalid application ID format. Expected format: TOW12345678');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const { data, error } = await supabase
-        .from('applications')
-        .select('application_id, character_name, status, created_at, reviewed_at, reviewer_notes')
-        .eq('application_id', applicationId.toUpperCase().trim())
-        .maybeSingle();
+      // Use secure edge function instead of direct database access
+      const { data, error } = await supabase.functions.invoke('check-application-status', {
+        body: { applicationId: sanitizedId }
+      });
 
       if (error) throw error;
 
-      if (!data) {
+      if (!data.found) {
         setNotFound(true);
       } else {
-        setApplication(data);
+        setApplication(data.application);
       }
     } catch (error: any) {
       console.error('Error checking status:', error);
-      toast.error(error.message || 'Failed to check status');
+      toast.error('Failed to check status. Please try again.');
     } finally {
       setIsLoading(false);
     }
