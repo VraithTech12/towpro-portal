@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { FileText, ArrowLeft, Loader2, CheckCircle, Copy, User, MessageSquare, Clock, MapPin, Truck, Shield, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -28,6 +29,12 @@ const Apply = () => {
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const completionPercentage = useMemo(() => {
+    const fields = Object.values(formData);
+    const filledFields = fields.filter(value => value.trim() !== '').length;
+    return Math.round((filledFields / fields.length) * 100);
+  }, [formData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +152,15 @@ const Apply = () => {
 
           {/* Application Form */}
           <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl shadow-xl overflow-hidden animate-fade-in">
+            {/* Progress Bar */}
+            <div className="px-8 pt-6 pb-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-muted-foreground">Form Completion</span>
+                <span className="text-sm font-bold text-primary">{completionPercentage}%</span>
+              </div>
+              <Progress value={completionPercentage} className="h-2" />
+            </div>
+
             {/* Form Header */}
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-8 py-6 border-b border-border/50">
               <div className="flex items-center gap-3">
