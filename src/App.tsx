@@ -19,6 +19,7 @@ import Mechanics from "./pages/dashboard/Mechanics";
 import Employees from "./pages/dashboard/Employees";
 import Settings from "./pages/dashboard/Settings";
 import Analytics from "./pages/dashboard/Analytics";
+import Applications from "./pages/dashboard/Applications";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="tow-units" element={<TowUnits />} />
                 <Route path="mechanics" element={<Mechanics />} />
                 <Route path="employees" element={<Employees />} />
+                <Route path="applications" element={<Applications />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
