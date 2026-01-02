@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import apexLogo from '@/assets/apex-logo.png';
 import loginBg from '@/assets/login-bg.png';
-import { LogIn, Mail, Lock, Eye, EyeOff, Search, FileText } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, Search, FileText, ClipboardList } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -140,19 +140,26 @@ const Login = () => {
           </div>
 
           {/* Application Options */}
-          <div className="grid grid-cols-2 gap-4 mt-6">
+          <div className="grid grid-cols-3 gap-3 mt-6">
             <Link to="/check-status" className="block">
               <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
                 <Search className="w-6 h-6 text-primary mx-auto mb-2" />
-                <h3 className="font-semibold text-foreground text-sm">Check Application Status</h3>
-                <p className="text-xs text-primary mt-1">Check Status</p>
+                <h3 className="font-semibold text-foreground text-sm">Check Status</h3>
+                <p className="text-xs text-primary mt-1">Track Application</p>
               </div>
             </Link>
             <Link to="/apply" className="block">
               <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
                 <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
                 <h3 className="font-semibold text-foreground text-sm">Want to join?</h3>
-                <p className="text-xs text-primary mt-1">Submit Application</p>
+                <p className="text-xs text-primary mt-1">Apply Now</p>
+              </div>
+            </Link>
+            <Link to="/dashboard/applications" className="block">
+              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
+                <ClipboardList className="w-6 h-6 text-primary mx-auto mb-2" />
+                <h3 className="font-semibold text-foreground text-sm">Admin</h3>
+                <p className="text-xs text-primary mt-1">Manage Apps</p>
               </div>
             </Link>
           </div>
