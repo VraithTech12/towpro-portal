@@ -7,8 +7,7 @@ import {
   Users, 
   Settings, 
   LogOut,
-  BarChart3,
-  ClipboardList
+  BarChart3
 } from 'lucide-react';
 import apexLogo from '@/assets/apex-logo.png';
 
@@ -26,7 +25,6 @@ const Sidebar = () => {
 
   const adminItems = [
     { path: '/dashboard/employees', icon: Users, label: 'Staff' },
-    { path: '/dashboard/applications', icon: ClipboardList, label: 'Applications' },
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
