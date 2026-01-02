@@ -296,23 +296,31 @@ const Applications = () => {
                 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Vehicle Breakdown Scenario</label>
-                    <p className="text-foreground text-sm">{selectedApplication.scenario_vehicle_breakdown}</p>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      A customer calls saying their vehicle broke down on the highway. What do you do?
+                    </label>
+                    <p className="text-foreground text-sm mt-1">{selectedApplication.scenario_vehicle_breakdown}</p>
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Difficult Customer Scenario</label>
-                    <p className="text-foreground text-sm">{selectedApplication.scenario_difficult_customer}</p>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      A customer is being aggressive and difficult. They are unhappy with the service. What do you do?
+                    </label>
+                    <p className="text-foreground text-sm mt-1">{selectedApplication.scenario_difficult_customer}</p>
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Enhance Roleplay Scenario</label>
-                    <p className="text-foreground text-sm">{selectedApplication.scenario_enhance_roleplay}</p>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Explain a time where you positively contributed to and enhanced a roleplay scenario?
+                    </label>
+                    <p className="text-foreground text-sm mt-1">{selectedApplication.scenario_enhance_roleplay}</p>
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Rule Break Response</label>
-                    <p className="text-foreground text-sm">{selectedApplication.rule_break_response}</p>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      A player has broken a server rule in front of you, what do you do?
+                    </label>
+                    <p className="text-foreground text-sm mt-1">{selectedApplication.rule_break_response}</p>
                   </div>
                 </div>
               </div>
