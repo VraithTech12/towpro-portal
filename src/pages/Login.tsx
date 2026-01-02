@@ -157,9 +157,15 @@ const Login = () => {
             </Link>
           </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            Contact the owner via Discord: <span className="text-primary font-medium">@iamvraith</span>
-          </p>
+          {/* Access Info */}
+          <div className="mt-8 p-4 rounded-xl bg-card/60 backdrop-blur border border-border/30 text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Need access to the portal?
+            </p>
+            <p className="text-sm text-foreground">
+              Contact the owner via Discord: <span className="text-primary font-semibold">@iamvraith</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>
