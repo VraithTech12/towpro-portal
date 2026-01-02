@@ -7,8 +7,6 @@ import {
   Users, 
   Settings, 
   LogOut,
-  Wrench,
-  PlusCircle,
   BarChart3
 } from 'lucide-react';
 import apexLogo from '@/assets/apex-logo.png';
@@ -22,9 +20,7 @@ const Sidebar = () => {
   const navItems = [
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/dashboard/reports', icon: FileText, label: 'Reports' },
-    { path: '/dashboard/new-report', icon: PlusCircle, label: 'New Report' },
     { path: '/dashboard/tow-units', icon: Truck, label: 'Tow Units' },
-    { path: '/dashboard/mechanics', icon: Wrench, label: 'Mechanics' },
   ];
 
   const adminItems = [

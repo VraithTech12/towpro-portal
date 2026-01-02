@@ -15,7 +15,7 @@ const DashboardHome = () => {
     ? reports.filter(r => r.assignedTo === user?.id)
     : reports;
 
-  const openReports = userReports.filter(r => r.status === 'open' || r.status === 'in-progress').length;
+  const openReports = userReports.filter(r => r.status === 'open' || r.status === 'in_progress').length;
   const clockedInCount = staff.filter(s => s.clockedIn).length;
 
   const isOwnerOrAdmin = role === 'owner' || role === 'admin';
@@ -229,11 +229,11 @@ const DashboardHome = () => {
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                     report.status === 'open' ? 'bg-primary/20 text-primary' :
-                    report.status === 'in-progress' ? 'bg-blue-500/20 text-blue-400' :
+                    report.status === 'in_progress' ? 'bg-blue-500/20 text-blue-400' :
                     report.status === 'closed' ? 'bg-muted text-muted-foreground' :
                     'bg-warning/20 text-warning'
                   }`}>
-                    {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+                    {report.status.replace('_', ' ').charAt(0).toUpperCase() + report.status.replace('_', ' ').slice(1)}
                   </span>
                 </div>
               ))}

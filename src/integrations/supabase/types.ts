@@ -81,10 +81,10 @@ export type Database = {
           created_by: string
           customer_name: string | null
           customer_phone: string | null
+          due_date: string | null
           id: string
           location: string
           notes: string | null
-          pd_tow: boolean
           status: string
           title: string
           type: string
@@ -96,10 +96,10 @@ export type Database = {
           created_by: string
           customer_name?: string | null
           customer_phone?: string | null
+          due_date?: string | null
           id?: string
           location: string
           notes?: string | null
-          pd_tow?: boolean
           status?: string
           title: string
           type: string
@@ -111,10 +111,10 @@ export type Database = {
           created_by?: string
           customer_name?: string | null
           customer_phone?: string | null
+          due_date?: string | null
           id?: string
           location?: string
           notes?: string | null
-          pd_tow?: boolean
           status?: string
           title?: string
           type?: string
