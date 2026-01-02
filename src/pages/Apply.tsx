@@ -10,6 +10,7 @@ import { FileText, ArrowLeft, Loader2, CheckCircle, Copy, User, MessageSquare, C
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import loginBg from '@/assets/login-bg.png';
 
 // Input validation schema
 const applicationSchema = z.object({
@@ -117,12 +118,19 @@ const Apply = () => {
 
   if (applicationId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        </div>
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${loginBg})` }}
+        />
+        
+        {/* Overlay with gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+        
+        {/* Decorative elements */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
 
         <div className="w-full max-w-md text-center space-y-6 relative z-10 animate-fade-in">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/20 to-green-600/20 flex items-center justify-center mx-auto">
@@ -165,13 +173,20 @@ const Apply = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen relative overflow-hidden bg-background">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${loginBg})` }}
+      />
+      
+      {/* Overlay with gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+      
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
 
       <div className="relative z-10 py-8 px-4">
         <div className="max-w-3xl mx-auto space-y-8">
