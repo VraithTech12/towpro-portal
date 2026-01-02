@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Search, Phone, Shield, Edit, Trash2, Loader2 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,12 @@ interface StaffMemberEdit {
   role: UserRole;
 }
 
+interface DeleteConfirm {
+  isOpen: boolean;
+  userId: string;
+  name: string;
+}
+
 const Employees = () => {
   const { role, staff, fetchStaff, user, refreshProfile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,6 +32,7 @@ const Employees = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffMemberEdit | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirm>({ isOpen: false, userId: '', name: '' });
   
   // Add form state
   const [formData, setFormData] = useState({
@@ -168,8 +176,13 @@ const Employees = () => {
     }
   };
 
-  const handleDelete = async (userId: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+  const handleDeleteClick = (userId: string, name: string) => {
+    setDeleteConfirm({ isOpen: true, userId, name });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const { userId } = deleteConfirm;
+    setDeleteConfirm({ isOpen: false, userId: '', name: '' });
 
     try {
       const { data, error } = await supabase.functions.invoke('delete-staff', {
@@ -397,7 +410,7 @@ const Employees = () => {
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(member.user_id, member.name)}
+                          onClick={() => handleDeleteClick(member.user_id, member.name)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -485,6 +498,24 @@ const Employees = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirm.isOpen} onOpenChange={(open) => !open && setDeleteConfirm({ isOpen: false, userId: '', name: '' })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to fire this employee?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {deleteConfirm.name} from the system. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Fire Employee
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
