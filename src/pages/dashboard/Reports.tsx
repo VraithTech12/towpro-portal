@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData, Report } from '@/contexts/DataContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,6 +17,28 @@ const Reports = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [assignedWorkerName, setAssignedWorkerName] = useState<string | null>(null);
+
+  // Fetch assigned worker's name when report changes
+  useEffect(() => {
+    const fetchAssignedWorkerName = async () => {
+      if (selectedReport?.assignedTo) {
+        if (selectedReport.assignedTo === user?.id) {
+          setAssignedWorkerName('You');
+        } else {
+          const { data } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('user_id', selectedReport.assignedTo)
+            .maybeSingle();
+          setAssignedWorkerName(data?.name || 'Unknown');
+        }
+      } else {
+        setAssignedWorkerName(null);
+      }
+    };
+    fetchAssignedWorkerName();
+  }, [selectedReport?.assignedTo, user?.id]);
 
   const isOwnerOrAdmin = role === 'owner' || role === 'admin';
 
@@ -289,13 +312,12 @@ const Reports = () => {
                 )}
               </div>
 
-              {/* Assigned Worker */}
               <div className="flex items-start gap-2 pt-2 border-t border-border">
                 <User className="w-4 h-4 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground">Assigned To</p>
                   <p className="text-sm text-foreground">
-                    {selectedReport.assignedTo === user?.id ? 'You' : (selectedReport.assignedTo ? 'Another worker' : 'Unassigned')}
+                    {assignedWorkerName || 'Unassigned'}
                   </p>
                 </div>
                 {!selectedReport.assignedTo && (
