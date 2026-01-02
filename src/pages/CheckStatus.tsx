@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Search, ArrowLeft, Loader2, Clock, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import loginBg from '@/assets/login-bg.png';
 
 
 interface ApplicationStatus {
@@ -83,8 +84,21 @@ const CheckStatus = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${loginBg})` }}
+      />
+      
+      {/* Overlay with gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/80" />
+      
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+
+      <div className="relative z-10 w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
           
