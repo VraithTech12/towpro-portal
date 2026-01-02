@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FileText, ArrowLeft, Loader2, CheckCircle, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import apexLogo from '@/assets/apex-logo.png';
+
 
 const Apply = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -115,7 +115,6 @@ const Apply = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
-          <img src={apexLogo} alt="Apex Towing" className="h-12 mx-auto" />
           <FileText className="w-12 h-12 text-primary mx-auto" />
           <h1 className="text-2xl font-bold text-foreground">Towing Application</h1>
           <p className="text-muted-foreground">
