@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          application_id: string
+          character_name: string
+          created_at: string
+          discord_name: string
+          experience: string
+          hours_per_week: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_notes: string | null
+          rule_break_response: string
+          scenario_difficult_customer: string
+          scenario_enhance_roleplay: string
+          scenario_vehicle_breakdown: string
+          status: string
+          timezone: string
+          updated_at: string
+          why_join: string
+        }
+        Insert: {
+          application_id?: string
+          character_name: string
+          created_at?: string
+          discord_name: string
+          experience: string
+          hours_per_week: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          rule_break_response: string
+          scenario_difficult_customer: string
+          scenario_enhance_roleplay: string
+          scenario_vehicle_breakdown: string
+          status?: string
+          timezone: string
+          updated_at?: string
+          why_join: string
+        }
+        Update: {
+          application_id?: string
+          character_name?: string
+          created_at?: string
+          discord_name?: string
+          experience?: string
+          hours_per_week?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_notes?: string | null
+          rule_break_response?: string
+          scenario_difficult_customer?: string
+          scenario_enhance_roleplay?: string
+          scenario_vehicle_breakdown?: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+          why_join?: string
+        }
+        Relationships: []
+      }
       clock_records: {
         Row: {
           clock_in: string

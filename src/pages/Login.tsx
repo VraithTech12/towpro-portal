@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import apexLogo from '@/assets/apex-logo.png';
 import loginBg from '@/assets/login-bg.png';
-import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff, Search, FileText } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -65,6 +65,24 @@ const Login = () => {
               Apex Towing & Recovery
             </h1>
             <p className="text-muted-foreground mt-2 text-sm">Operations Portal</p>
+          </div>
+
+          {/* Application Options */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <Link to="/check-status" className="block">
+              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
+                <Search className="w-6 h-6 text-primary mx-auto mb-2" />
+                <h3 className="font-semibold text-foreground text-sm">Check Application Status</h3>
+                <p className="text-xs text-primary mt-1">Check Status</p>
+              </div>
+            </Link>
+            <Link to="/apply" className="block">
+              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl p-4 text-center hover:bg-card/90 transition-colors h-full">
+                <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
+                <h3 className="font-semibold text-foreground text-sm">Want to join?</h3>
+                <p className="text-xs text-primary mt-1">Submit Application</p>
+              </div>
+            </Link>
           </div>
 
           {/* Login Card */}
