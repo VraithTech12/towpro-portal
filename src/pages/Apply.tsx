@@ -190,15 +190,6 @@ const Apply = () => {
 
           {/* Application Form */}
           <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl shadow-xl overflow-hidden animate-fade-in">
-            {/* Progress Bar */}
-            <div className="px-8 pt-6 pb-2">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Form Completion</span>
-                <span className="text-sm font-bold text-primary">{completionPercentage}%</span>
-              </div>
-              <Progress value={completionPercentage} className="h-2" />
-            </div>
-
             {/* Form Header */}
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-8 py-6 border-b border-border/50">
               <div className="flex items-center gap-3">
@@ -210,6 +201,15 @@ const Apply = () => {
                   <p className="text-sm text-muted-foreground">All fields are required. Please be truthful and concise.</p>
                 </div>
               </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="px-8 pt-6 pb-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-muted-foreground">Form Completion</span>
+                <span className="text-sm font-bold text-primary">{completionPercentage}%</span>
+              </div>
+              <Progress value={completionPercentage} className="h-2" />
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-8">
