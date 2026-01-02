@@ -5,7 +5,7 @@ import { useData, Report } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, FileText, Trash2, MapPin, Phone, User, FileType, Calendar, StickyNote, Shield } from 'lucide-react';
+import { Plus, Search, FileText, Trash2, MapPin, Phone, User, FileType, Calendar, StickyNote, Shield, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Reports = () => {
@@ -289,6 +289,35 @@ const Reports = () => {
                 )}
               </div>
 
+              {/* Assigned Worker */}
+              <div className="flex items-start gap-2 pt-2 border-t border-border">
+                <User className="w-4 h-4 text-muted-foreground mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Assigned To</p>
+                  <p className="text-sm text-foreground">
+                    {selectedReport.assignedTo === user?.id ? 'You' : (selectedReport.assignedTo ? 'Another worker' : 'Unassigned')}
+                  </p>
+                </div>
+                {!selectedReport.assignedTo && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const success = await updateReport(selectedReport.id, { assignedTo: user?.id });
+                      if (success) {
+                        toast.success('You have been assigned to this report');
+                        setSelectedReport({ ...selectedReport, assignedTo: user?.id });
+                      } else {
+                        toast.error('Failed to assign report');
+                      }
+                    }}
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Assign to Me
+                  </Button>
+                )}
+              </div>
+
               {selectedReport.notes && (
                 <div className="flex items-start gap-2 pt-2 border-t border-border">
                   <StickyNote className="w-4 h-4 text-muted-foreground mt-0.5" />
@@ -299,8 +328,25 @@ const Reports = () => {
                 </div>
               )}
 
-              {isOwnerOrAdmin && (
-                <div className="flex justify-end pt-2 border-t border-border">
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                {selectedReport.assignedTo === user?.id && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const success = await updateReport(selectedReport.id, { assignedTo: undefined });
+                      if (success) {
+                        toast.success('You have been unassigned from this report');
+                        setSelectedReport({ ...selectedReport, assignedTo: undefined });
+                      } else {
+                        toast.error('Failed to unassign');
+                      }
+                    }}
+                  >
+                    Unassign Me
+                  </Button>
+                )}
+                {isOwnerOrAdmin && (
                   <Button
                     variant="destructive"
                     size="sm"
@@ -309,8 +355,8 @@ const Reports = () => {
                     <Trash2 className="w-4 h-4" />
                     Delete Report
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
