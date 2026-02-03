@@ -6,7 +6,7 @@ export interface Report {
   id: string;
   title: string;
   type: 'tow' | 'roadside' | 'impound' | 'pd_tow';
-  status: 'open' | 'closed' | 'in_progress';
+  status: 'open' | 'assigned' | 'en_route' | 'in_progress' | 'completed' | 'cancelled' | 'closed';
   dateCreated: string;
   dueDate?: string;
   location: string;

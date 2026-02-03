@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { 
   BarChart3, 
   Clock, 
@@ -11,16 +9,22 @@ import {
   FileText, 
   TrendingUp,
   Calendar,
-  User
+  User,
+  Truck,
+  CheckCircle,
+  Shield
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { Input } from '@/components/ui/input';
+import { format } from 'date-fns';
 
 const Analytics = () => {
-  const { staff, clockRecords } = useAuth();
+  const { role, staff, clockRecords } = useAuth();
   const { reports } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<'week' | 'month' | 'all'>('week');
 
+  const isOwner = role === 'owner';
   const employees = staff.filter(s => s.role === 'employee' || s.role === 'admin');
   
   const filteredEmployees = employees.filter(emp =>
@@ -29,80 +33,174 @@ const Analytics = () => {
   );
 
   const getEmployeeStats = (userId: string) => {
-    const userReports = reports.filter(r => r.assignedTo === userId);
+    const userReports = reports.filter(r => r.assignedTo === userId || r.createdBy === userId);
     const userClockRecords = clockRecords.filter(r => r.user_id === userId);
     const today = new Date().toISOString().split('T')[0];
     const todayRecords = userClockRecords.filter(r => r.date === today);
     const todayHours = todayRecords.reduce((acc, r) => acc + (r.duration || 0), 0) / 60;
     const totalHours = userClockRecords.reduce((acc, r) => acc + (r.duration || 0), 0) / 60;
+    const civTows = userReports.filter(r => r.type !== 'pd_tow').length;
+    const pdTows = userReports.filter(r => r.type === 'pd_tow').length;
+    const completedReports = userReports.filter(r => r.status === 'closed' || r.status === 'completed').length;
     
     return {
       totalReports: userReports.length,
-      completedReports: userReports.filter(r => r.status === 'closed').length,
+      completedReports,
+      civTows,
+      pdTows,
       todayHours,
       totalHours,
       clockRecords: userClockRecords,
       isClockedIn: staff.find(s => s.user_id === userId)?.clockedIn || false,
+      avgPerHour: totalHours > 0 ? userReports.length / totalHours : 0,
     };
   };
 
   const selectedEmployee = selectedUser ? staff.find(s => s.user_id === selectedUser) : null;
   const selectedStats = selectedUser ? getEmployeeStats(selectedUser) : null;
 
+  // Overall stats
+  const totalReports = reports.length;
+  const openReports = reports.filter(r => r.status === 'open').length;
+  const completedReports = reports.filter(r => r.status === 'closed' || r.status === 'completed').length;
+  const civTows = reports.filter(r => r.type !== 'pd_tow').length;
+  const pdTows = reports.filter(r => r.type === 'pd_tow').length;
+  const totalHours = clockRecords.reduce((acc, r) => acc + (r.duration || 0), 0) / 60;
+
+  if (!isOwner && role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Access restricted to management.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
-          <p className="text-muted-foreground mt-1">Track employee performance and time</p>
+          <h1 className="text-xl font-semibold text-foreground">Operations Analytics</h1>
+          <p className="text-muted-foreground text-sm">
+            {isOwner ? 'Executive overview and performance metrics' : 'Team performance metrics'}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-muted-foreground" />
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value as any)}
+            className="h-9 px-3 rounded-lg border border-border bg-input text-foreground text-sm"
+          >
+            <option value="week">Last 7 Days</option>
+            <option value="month">Last 30 Days</option>
+            <option value="all">All Time</option>
+          </select>
         </div>
       </div>
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary" />
-            </div>
+          <div className="flex items-center justify-between mb-3">
+            <FileText className="w-5 h-5 text-primary" />
+            <TrendingUp className="w-4 h-4 text-success" />
           </div>
-          <p className="text-3xl font-bold text-foreground">{employees.length}</p>
-          <p className="text-sm text-muted-foreground mt-1">Total Staff</p>
+          <p className="text-3xl font-bold text-foreground">{totalReports}</p>
+          <p className="text-sm text-muted-foreground">Total Dispatches</p>
         </div>
 
         <div className="bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-success" />
-            </div>
+          <div className="flex items-center justify-between mb-3">
+            <CheckCircle className="w-5 h-5 text-success" />
           </div>
-          <p className="text-3xl font-bold text-foreground">
-            {employees.filter(e => e.clockedIn).length}
+          <p className="text-3xl font-bold text-foreground">{completedReports}</p>
+          <p className="text-sm text-muted-foreground">Completed</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {totalReports > 0 ? Math.round((completedReports / totalReports) * 100) : 0}% rate
           </p>
-          <p className="text-sm text-muted-foreground mt-1">Currently Clocked In</p>
         </div>
 
         <div className="bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
+          <div className="flex items-center justify-between mb-3">
+            <Truck className="w-5 h-5 text-blue-400" />
           </div>
-          <p className="text-3xl font-bold text-foreground">{reports.length}</p>
-          <p className="text-sm text-muted-foreground mt-1">Total Reports</p>
+          <p className="text-3xl font-bold text-foreground">{civTows}</p>
+          <p className="text-sm text-muted-foreground">Civilian Tows</p>
         </div>
 
         <div className="bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-success" />
+          <div className="flex items-center justify-between mb-3">
+            <Shield className="w-5 h-5 text-amber-400" />
+          </div>
+          <p className="text-3xl font-bold text-foreground">{pdTows}</p>
+          <p className="text-sm text-muted-foreground">PD Tows</p>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <Clock className="w-5 h-5 text-amber-500" />
+          </div>
+          <p className="text-3xl font-bold text-foreground">{totalHours.toFixed(0)}h</p>
+          <p className="text-sm text-muted-foreground">Total Hours</p>
+        </div>
+      </div>
+
+      {/* Tow Type Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-card border border-border rounded-xl p-5">
+          <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Truck className="w-5 h-5 text-muted-foreground" />
+            Tow Type Distribution
+          </h2>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-foreground">Civilian Tows</span>
+                <span className="text-muted-foreground">{civTows}</span>
+              </div>
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 rounded-full transition-all"
+                  style={{ width: `${totalReports > 0 ? (civTows / totalReports) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-foreground">PD Tows</span>
+                <span className="text-muted-foreground">{pdTows}</span>
+              </div>
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-amber-500 rounded-full transition-all"
+                  style={{ width: `${totalReports > 0 ? (pdTows / totalReports) * 100 : 0}%` }}
+                />
+              </div>
             </div>
           </div>
-          <p className="text-3xl font-bold text-foreground">
-            {reports.filter(r => r.status === 'closed').length}
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">Completed Reports</p>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-5">
+          <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-muted-foreground" />
+            Status Overview
+          </h2>
+          <div className="space-y-3">
+            {[
+              { status: 'Open', count: reports.filter(r => r.status === 'open').length, color: 'bg-primary' },
+              { status: 'Assigned', count: reports.filter(r => r.status === 'assigned').length, color: 'bg-blue-500' },
+              { status: 'En Route', count: reports.filter(r => r.status === 'en_route').length, color: 'bg-amber-500' },
+              { status: 'In Progress', count: reports.filter(r => r.status === 'in_progress').length, color: 'bg-purple-500' },
+              { status: 'Completed', count: completedReports, color: 'bg-success' },
+            ].map((item) => (
+              <div key={item.status} className="flex items-center gap-3">
+                <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                <span className="text-sm text-foreground flex-1">{item.status}</span>
+                <span className="text-sm font-medium text-foreground">{item.count}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -110,7 +208,7 @@ const Analytics = () => {
         {/* Employee List */}
         <div className="col-span-1 bg-card border border-border rounded-xl overflow-hidden">
           <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground mb-3">Staff Members</h2>
+            <h2 className="font-semibold text-foreground mb-3">Staff Performance</h2>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -122,7 +220,7 @@ const Analytics = () => {
               />
             </div>
           </div>
-          <div className="max-h-[500px] overflow-y-auto">
+          <div className="max-h-[400px] overflow-y-auto">
             {filteredEmployees.length === 0 ? (
               <div className="p-8 text-center">
                 <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
@@ -152,11 +250,11 @@ const Analytics = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground truncate">{employee.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{employee.role}</p>
+                        <p className="text-xs text-muted-foreground">{stats.totalReports} dispatches</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-foreground">{stats.todayHours.toFixed(1)}h</p>
-                        <p className="text-xs text-muted-foreground">Today</p>
+                        <p className="text-sm font-medium text-foreground">{stats.totalHours.toFixed(1)}h</p>
+                        <p className="text-xs text-muted-foreground">Total</p>
                       </div>
                     </div>
                   </button>
@@ -185,18 +283,15 @@ const Analytics = () => {
                   <div>
                     <h2 className="text-xl font-bold text-foreground">{selectedEmployee.name}</h2>
                     <p className="text-muted-foreground capitalize">{selectedEmployee.role}</p>
-                    {selectedEmployee.phone && (
-                      <p className="text-sm text-muted-foreground">{selectedEmployee.phone}</p>
-                    )}
                   </div>
                   <div className="ml-auto">
                     {selectedStats.isClockedIn ? (
                       <span className="px-3 py-1 rounded-full bg-success/10 text-success text-sm font-medium">
-                        Clocked In
+                        On Duty
                       </span>
                     ) : (
                       <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm font-medium">
-                        Clocked Out
+                        Off Duty
                       </span>
                     )}
                   </div>
@@ -204,7 +299,7 @@ const Analytics = () => {
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-4 gap-4 p-6 border-b border-border">
+              <div className="grid grid-cols-5 gap-4 p-6 border-b border-border">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{selectedStats.todayHours.toFixed(1)}h</p>
                   <p className="text-sm text-muted-foreground">Today</p>
@@ -215,24 +310,46 @@ const Analytics = () => {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{selectedStats.totalReports}</p>
-                  <p className="text-sm text-muted-foreground">Reports</p>
+                  <p className="text-sm text-muted-foreground">Dispatches</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-foreground">{selectedStats.completedReports}</p>
-                  <p className="text-sm text-muted-foreground">Completed</p>
+                  <p className="text-2xl font-bold text-blue-400">{selectedStats.civTows}</p>
+                  <p className="text-sm text-muted-foreground">Civ Tows</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-amber-400">{selectedStats.pdTows}</p>
+                  <p className="text-sm text-muted-foreground">PD Tows</p>
                 </div>
               </div>
 
-              {/* Time Records */}
+              {/* Performance Metrics */}
               <div className="p-6">
-                <h3 className="font-semibold text-foreground mb-4">Recent Time Records</h3>
+                <h3 className="font-semibold text-foreground mb-4">Performance Metrics</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-secondary/50">
+                    <p className="text-sm text-muted-foreground">Efficiency</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {selectedStats.avgPerHour.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">dispatches/hr</span>
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-secondary/50">
+                    <p className="text-sm text-muted-foreground">Completion Rate</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {selectedStats.totalReports > 0 
+                        ? Math.round((selectedStats.completedReports / selectedStats.totalReports) * 100) 
+                        : 0}%
+                    </p>
+                  </div>
+                </div>
+
+                <h3 className="font-semibold text-foreground mt-6 mb-4">Recent Shifts</h3>
                 {selectedStats.clockRecords.length === 0 ? (
                   <div className="text-center py-8">
                     <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground">No time records yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-[250px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[200px] overflow-y-auto">
                     {selectedStats.clockRecords.slice().reverse().slice(0, 10).map((record) => (
                       <div 
                         key={record.id}
@@ -256,7 +373,7 @@ const Analytics = () => {
                               {(record.duration / 60).toFixed(1)}h
                             </p>
                           ) : (
-                            <p className="text-sm text-success">In progress</p>
+                            <p className="text-sm text-success">Active</p>
                           )}
                         </div>
                       </div>
