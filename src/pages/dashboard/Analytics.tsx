@@ -107,7 +107,7 @@ const Analytics = () => {
             <TrendingUp className="w-4 h-4 text-success" />
           </div>
           <p className="text-3xl font-bold text-foreground">{totalReports}</p>
-          <p className="text-sm text-muted-foreground">Total Dispatches</p>
+          <p className="text-sm text-muted-foreground">Total Reports</p>
         </div>
 
         <div className="bg-card border border-border rounded-xl p-5">
@@ -250,7 +250,7 @@ const Analytics = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground truncate">{employee.name}</p>
-                        <p className="text-xs text-muted-foreground">{stats.totalReports} dispatches</p>
+                        <p className="text-xs text-muted-foreground">{stats.totalReports} reports</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium text-foreground">{stats.totalHours.toFixed(1)}h</p>
@@ -310,7 +310,7 @@ const Analytics = () => {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-foreground">{selectedStats.totalReports}</p>
-                  <p className="text-sm text-muted-foreground">Dispatches</p>
+                  <p className="text-sm text-muted-foreground">Reports</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-blue-400">{selectedStats.civTows}</p>
@@ -329,7 +329,7 @@ const Analytics = () => {
                   <div className="p-4 rounded-lg bg-secondary/50">
                     <p className="text-sm text-muted-foreground">Efficiency</p>
                     <p className="text-2xl font-bold text-foreground">
-                      {selectedStats.avgPerHour.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">dispatches/hr</span>
+                      {selectedStats.avgPerHour.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">reports/hr</span>
                     </p>
                   </div>
                   <div className="p-4 rounded-lg bg-secondary/50">

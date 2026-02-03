@@ -78,16 +78,16 @@ const NewReport = () => {
         formData.notes,
       ].filter(Boolean).join('\n'),
       dueDate: formData.dueDate || undefined,
-      status: 'open',
+      status: role === 'employee' ? 'assigned' : 'open',
     });
 
     setIsSubmitting(false);
 
     if (success) {
-      toast.success('Dispatch created successfully - standing by for assignment');
+      toast.success(role === 'employee' ? 'Report created and assigned to you' : 'Report created successfully');
       navigate('/dashboard/reports');
     } else {
-      toast.error('Failed to create dispatch');
+      toast.error('Failed to create report');
     }
   };
 
@@ -108,8 +108,8 @@ const NewReport = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-xl font-semibold text-foreground">New Dispatch</h1>
-          <p className="text-sm text-muted-foreground">Create a new tow request or service call</p>
+          <h1 className="text-xl font-semibold text-foreground">New Report</h1>
+          <p className="text-sm text-muted-foreground">Create a new tow report or service call</p>
         </div>
       </div>
 
@@ -148,7 +148,7 @@ const NewReport = () => {
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <Input
-                  placeholder="Enter dispatch title (or leave blank for auto-generate)..."
+                  placeholder="Enter report title (or leave blank for auto-generate)..."
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="text-lg font-semibold bg-transparent border-none p-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/50"
@@ -220,7 +220,7 @@ const NewReport = () => {
                   <span className="font-medium">Police Department Request</span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Customer information not required for PD dispatches.
+                  Customer information not required for PD reports.
                 </p>
               </div>
             )}
@@ -350,7 +350,7 @@ const NewReport = () => {
             ) : (
               <Save className="w-4 h-4" />
             )}
-            Create Dispatch
+            Create Report
           </Button>
         </div>
       </form>

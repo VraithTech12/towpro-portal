@@ -123,7 +123,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       action: 'report_created',
       entityType: 'report',
       entityId: data.id,
-      details: `Created dispatch: ${report.title} at ${report.location}`,
+      details: `Created report: ${report.title} at ${report.location}`,
       newValue: { title: report.title, type: report.type, location: report.location },
     });
 
@@ -172,7 +172,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         action: 'report_assigned',
         entityType: 'report',
         entityId: id,
-        details: updates.assignedTo ? `Dispatch assigned to operator` : `Dispatch unassigned`,
+        details: updates.assignedTo ? `Report assigned to operator` : `Report unassigned`,
         newValue: { assignedTo: updates.assignedTo },
       });
     } else {
@@ -180,7 +180,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         action: 'report_updated',
         entityType: 'report',
         entityId: id,
-        details: `Dispatch details updated`,
+        details: `Report details updated`,
         newValue: updates,
       });
     }
@@ -207,7 +207,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       action: 'report_deleted',
       entityType: 'report',
       entityId: id,
-      details: reportToDelete ? `Deleted dispatch: ${reportToDelete.title}` : `Deleted dispatch`,
+      details: reportToDelete ? `Deleted report: ${reportToDelete.title}` : `Deleted report`,
       oldValue: reportToDelete ? { title: reportToDelete.title, status: reportToDelete.status } : undefined,
     });
 
