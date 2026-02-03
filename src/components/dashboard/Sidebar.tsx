@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   BarChart3,
-  ClipboardList
+  ClipboardList,
+  History
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -27,6 +28,7 @@ const Sidebar = () => {
     { path: '/dashboard/employees', icon: Users, label: 'Staff' },
     { path: '/dashboard/applications', icon: ClipboardList, label: 'Applications' },
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+    { path: '/dashboard/audit-logs', icon: History, label: 'Audit Logs' },
     { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
 
