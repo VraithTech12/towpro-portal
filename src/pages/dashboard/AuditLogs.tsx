@@ -3,16 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   History, 
-  User, 
   FileText, 
   UserPlus, 
   Clock, 
   Settings,
-  Filter,
-  Calendar,
-  Search
+  Search,
+  RefreshCw
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 
 interface AuditLog {
@@ -35,45 +34,36 @@ const AuditLogs = () => {
 
   const isOwner = role === 'owner';
 
-  // Mock data for now since audit_logs table doesn't exist yet
-  const mockLogs: AuditLog[] = [
-    {
-      id: '1',
-      user_id: '123',
-      user_name: 'John Smith',
-      action: 'report_created',
-      entity_type: 'report',
-      entity_id: 'abc123',
-      details: 'Created dispatch for Vapid Buffalo',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      user_id: '456',
-      user_name: 'Jane Doe',
-      action: 'clock_in',
-      entity_type: 'clock_record',
-      entity_id: null,
-      details: 'Started shift',
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      id: '3',
-      user_id: '123',
-      user_name: 'John Smith',
-      action: 'report_status_changed',
-      entity_type: 'report',
-      entity_id: 'abc123',
-      details: 'Status changed from open to assigned',
-      created_at: new Date(Date.now() - 7200000).toISOString(),
-    },
-  ];
+  const fetchLogs = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('id, user_id, user_name, action, entity_type, entity_id, details, created_at')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error('Error fetching audit logs:', error);
+        setLogs([]);
+      } else {
+        setLogs(data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch audit logs:', err);
+      setLogs([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // TODO: Fetch from audit_logs table when it exists
-    setLogs(mockLogs);
-    setIsLoading(false);
-  }, []);
+    if (role === 'owner' || role === 'admin') {
+      fetchLogs();
+    } else {
+      setIsLoading(false);
+    }
+  }, [role]);
 
   const getActionIcon = (action: string) => {
     if (action.includes('report')) return FileText;
@@ -86,7 +76,9 @@ const AuditLogs = () => {
   const getActionColor = (action: string) => {
     if (action.includes('created')) return 'text-success';
     if (action.includes('deleted')) return 'text-destructive';
-    if (action.includes('updated') || action.includes('changed')) return 'text-blue-400';
+    if (action.includes('updated') || action.includes('changed') || action.includes('assigned')) return 'text-blue-400';
+    if (action.includes('clock_in')) return 'text-success';
+    if (action.includes('clock_out')) return 'text-amber-400';
     return 'text-muted-foreground';
   };
 
@@ -119,6 +111,15 @@ const AuditLogs = () => {
           <h1 className="text-xl font-semibold text-foreground">Audit Logs</h1>
           <p className="text-sm text-muted-foreground">System activity and change history</p>
         </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={fetchLogs}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Filters */}
@@ -156,7 +157,9 @@ const AuditLogs = () => {
       ) : filteredLogs.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <History className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">No audit logs found</p>
+          <p className="text-muted-foreground">
+            {logs.length === 0 ? 'No audit logs recorded yet. Actions will appear here as they happen.' : 'No audit logs match your search.'}
+          </p>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -177,7 +180,7 @@ const AuditLogs = () => {
                         </span>
                         {log.entity_id && (
                           <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">
-                            #{log.entity_id.slice(-6)}
+                            #{log.entity_id.slice(0, 8)}
                           </span>
                         )}
                       </div>

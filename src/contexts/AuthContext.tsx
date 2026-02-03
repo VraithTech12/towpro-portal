@@ -266,27 +266,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const clockIn = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('clock_records')
       .insert({
         user_id: user.id,
         clock_in: new Date().toISOString(),
         date: new Date().toISOString().split('T')[0],
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       console.error('Clock in error:', error);
       return;
     }
 
+    // Log the audit event
+    await supabase.from('audit_logs').insert({
+      user_id: user.id,
+      user_name: profile.name,
+      action: 'clock_in',
+      entity_type: 'clock_record',
+      entity_id: data?.id || null,
+      details: 'Started shift',
+    } as never);
+
     setIsClockedIn(true);
     fetchUserClockRecords(user.id);
   };
 
   const clockOut = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     
     // Find any open record (not just today's - handles stale records)
     const { data: openRecord } = await supabase
@@ -315,6 +327,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Clock out error:', error);
       return;
     }
+
+    // Log the audit event
+    const hours = Math.floor(duration / 60);
+    const minutes = duration % 60;
+    await supabase.from('audit_logs').insert({
+      user_id: user.id,
+      user_name: profile.name,
+      action: 'clock_out',
+      entity_type: 'clock_record',
+      entity_id: openRecord.id,
+      details: `Ended shift (${hours}h ${minutes}m)`,
+    } as never);
 
     setIsClockedIn(false);
     fetchUserClockRecords(user.id);
