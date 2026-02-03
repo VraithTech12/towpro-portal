@@ -59,12 +59,12 @@ const Reports = () => {
     const success = await updateReport(id, { status });
     if (success) {
       const statusMessages: Record<string, string> = {
-        open: 'Dispatch reopened',
-        assigned: 'Dispatch assigned',
+        open: 'Report reopened',
+        assigned: 'Report assigned',
         en_route: 'Unit en route to location',
         in_progress: 'Tow in progress',
-        completed: 'Dispatch completed - good work!',
-        cancelled: 'Dispatch cancelled',
+        completed: 'Report completed - good work!',
+        cancelled: 'Report cancelled',
       };
       toast.success(statusMessages[status] || 'Status updated');
       if (selectedReport?.id === id) {
@@ -82,10 +82,10 @@ const Reports = () => {
       status: 'assigned' as any
     });
     if (success) {
-      toast.success('You have been assigned to this dispatch');
+      toast.success('You have been assigned to this report');
       setSelectedReport({ ...selectedReport, assignedTo: user?.id, status: 'assigned' as any });
     } else {
-      toast.error('Failed to assign dispatch');
+      toast.error('Failed to assign report');
     }
   };
 
@@ -96,7 +96,7 @@ const Reports = () => {
       status: 'open'
     });
     if (success) {
-      toast.success('You have been unassigned from this dispatch');
+      toast.success('You have been unassigned from this report');
       setSelectedReport({ ...selectedReport, assignedTo: undefined, status: 'open' });
     } else {
       toast.error('Failed to unassign');
@@ -105,15 +105,15 @@ const Reports = () => {
 
   const handleDelete = async (id: string) => {
     if (!isOwnerOrAdmin) {
-      toast.error('Only management can delete dispatches');
+      toast.error('Only management can delete reports');
       return;
     }
     const success = await deleteReport(id);
     if (success) {
-      toast.success('Dispatch deleted');
+      toast.success('Report deleted');
       setIsDetailOpen(false);
     } else {
-      toast.error('Failed to delete dispatch');
+      toast.error('Failed to delete report');
     }
   };
 
@@ -142,15 +142,15 @@ const Reports = () => {
     <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Dispatch Board</h1>
+          <h1 className="text-xl font-semibold text-foreground">Report Board</h1>
           <p className="text-sm text-muted-foreground">
-            {isOwnerOrAdmin ? 'All active dispatches' : 'Available and assigned dispatches'}
+            {isOwnerOrAdmin ? 'All active reports' : 'Your reports and available jobs'}
           </p>
         </div>
         <Link to="/dashboard/new-report">
           <Button>
             <Plus className="w-4 h-4" />
-            New Dispatch
+            New Report
           </Button>
         </Link>
       </div>
@@ -182,7 +182,7 @@ const Reports = () => {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search dispatches..."
+              placeholder="Search reports..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 h-9"
@@ -218,19 +218,19 @@ const Reports = () => {
       {isLoadingReports ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-muted-foreground">Loading dispatches...</p>
+          <p className="text-muted-foreground">Loading reports...</p>
         </div>
       ) : filteredReports.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground mb-3">
-            {reports.length === 0 ? 'No dispatches yet' : 'No dispatches match your filters'}
+            {reports.length === 0 ? 'No reports yet' : 'No reports match your filters'}
           </p>
           {reports.length === 0 && (
             <Link to="/dashboard/new-report">
               <Button variant="outline" size="sm">
                 <Plus className="w-4 h-4" />
-                Create Dispatch
+                Create Report
               </Button>
             </Link>
           )}
@@ -306,7 +306,7 @@ const Reports = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary" />
-              Dispatch #{selectedReport?.id.slice(-4)}
+              Report #{selectedReport?.id.slice(-4)}
             </DialogTitle>
           </DialogHeader>
           {selectedReport && (
