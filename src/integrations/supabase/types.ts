@@ -77,6 +77,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       clock_records: {
         Row: {
           clock_in: string

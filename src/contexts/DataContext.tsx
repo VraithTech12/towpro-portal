@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 export interface Report {
   id: string;
@@ -44,7 +45,8 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { user, role, isAuthenticated } = useAuth();
+  const { user, role, isAuthenticated, profile } = useAuth();
+  const { logAudit } = useAuditLog();
   const [reports, setReports] = useState<Report[]>([]);
   const [towUnits, setTowUnits] = useState<TowUnit[]>([]);
   const [isLoadingReports, setIsLoadingReports] = useState(false);
@@ -116,6 +118,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
+    // Log the audit event
+    await logAudit({
+      action: 'report_created',
+      entityType: 'report',
+      entityId: data.id,
+      details: `Created dispatch: ${report.title} at ${report.location}`,
+      newValue: { title: report.title, type: report.type, location: report.location },
+    });
+
     // Refresh reports list
     await fetchReports();
     return true;
@@ -133,6 +144,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (updates.assignedTo !== undefined) dbUpdates.assigned_to = updates.assignedTo;
     if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
 
+    // Find the current report to capture old values
+    const currentReport = reports.find(r => r.id === id);
+
     const { error } = await supabase
       .from('reports')
       .update(dbUpdates)
@@ -143,11 +157,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
+    // Log the audit event
+    if (updates.status !== undefined && currentReport) {
+      await logAudit({
+        action: 'report_status_changed',
+        entityType: 'report',
+        entityId: id,
+        details: `Status changed from ${currentReport.status} to ${updates.status}`,
+        oldValue: { status: currentReport.status },
+        newValue: { status: updates.status },
+      });
+    } else if (updates.assignedTo !== undefined) {
+      await logAudit({
+        action: 'report_assigned',
+        entityType: 'report',
+        entityId: id,
+        details: updates.assignedTo ? `Dispatch assigned to operator` : `Dispatch unassigned`,
+        newValue: { assignedTo: updates.assignedTo },
+      });
+    } else {
+      await logAudit({
+        action: 'report_updated',
+        entityType: 'report',
+        entityId: id,
+        details: `Dispatch details updated`,
+        newValue: updates,
+      });
+    }
+
     await fetchReports();
     return true;
   };
 
   const deleteReport = async (id: string): Promise<boolean> => {
+    const reportToDelete = reports.find(r => r.id === id);
+
     const { error } = await supabase
       .from('reports')
       .delete()
@@ -157,6 +201,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       console.error('Error deleting report:', error);
       return false;
     }
+
+    // Log the audit event
+    await logAudit({
+      action: 'report_deleted',
+      entityType: 'report',
+      entityId: id,
+      details: reportToDelete ? `Deleted dispatch: ${reportToDelete.title}` : `Deleted dispatch`,
+      oldValue: reportToDelete ? { title: reportToDelete.title, status: reportToDelete.status } : undefined,
+    });
 
     await fetchReports();
     return true;

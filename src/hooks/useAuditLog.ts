@@ -32,17 +32,28 @@ export function useAuditLog() {
   const { user, profile } = useAuth();
 
   const logAudit = useCallback(async (params: LogAuditParams) => {
-    if (!user || !profile) return;
+    if (!user || !profile) {
+      console.warn('[AUDIT] Cannot log - no user/profile');
+      return;
+    }
 
     try {
-      // Note: audit_logs table will be created via migration
-      // This is a placeholder that logs to console until the table exists
-      console.log('[AUDIT]', {
-        user_id: user.id,
-        user_name: profile.name,
-        ...params,
-        timestamp: new Date().toISOString(),
-      });
+      const { error } = await supabase
+        .from('audit_logs')
+        .insert({
+          user_id: user.id,
+          user_name: profile.name,
+          action: params.action,
+          entity_type: params.entityType,
+          entity_id: params.entityId || null,
+          details: params.details || null,
+          old_value: params.oldValue as Record<string, unknown> | null,
+          new_value: params.newValue as Record<string, unknown> | null,
+        } as never);
+
+      if (error) {
+        console.error('[AUDIT] Failed to log:', error);
+      }
     } catch (error) {
       console.error('Failed to log audit event:', error);
     }
