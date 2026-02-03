@@ -190,10 +190,16 @@ export type Database = {
           id: string
           location: string
           notes: string | null
+          scenario_notes: string | null
           status: string
           title: string
+          tow_reason: string | null
           type: string
           updated_at: string
+          vehicle_color: string | null
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_plate: string | null
         }
         Insert: {
           assigned_to?: string | null
@@ -205,10 +211,16 @@ export type Database = {
           id?: string
           location: string
           notes?: string | null
+          scenario_notes?: string | null
           status?: string
           title: string
+          tow_reason?: string | null
           type: string
           updated_at?: string
+          vehicle_color?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
         }
         Update: {
           assigned_to?: string | null
@@ -220,10 +232,16 @@ export type Database = {
           id?: string
           location?: string
           notes?: string | null
+          scenario_notes?: string | null
           status?: string
           title?: string
+          tow_reason?: string | null
           type?: string
           updated_at?: string
+          vehicle_color?: string | null
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_plate?: string | null
         }
         Relationships: []
       }
