@@ -8,12 +8,24 @@ import {
   Clock, 
   Settings,
   Search,
-  RefreshCw
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 interface AuditLog {
   id: string;
   user_id: string;
@@ -103,6 +115,26 @@ const AuditLogs = () => {
     );
   }
 
+  const clearLogs = async () => {
+    try {
+      const { error } = await supabase
+        .from('audit_logs')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+
+      if (error) {
+        console.error('Error clearing audit logs:', error);
+        toast.error('Failed to clear logs');
+      } else {
+        toast.success('Audit logs cleared');
+        setLogs([]);
+      }
+    } catch (err) {
+      console.error('Failed to clear audit logs:', err);
+      toast.error('Failed to clear logs');
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -111,15 +143,41 @@ const AuditLogs = () => {
           <h1 className="text-xl font-semibold text-foreground">Audit Logs</h1>
           <p className="text-sm text-muted-foreground">System activity and change history</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={fetchLogs}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          {isOwner && logs.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Clear Logs
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear all audit logs?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. All {logs.length} audit log entries will be permanently deleted.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={clearLogs} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Clear All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={fetchLogs}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -207,7 +265,7 @@ const AuditLogs = () => {
           <div>
             <p className="font-medium text-foreground">Audit Log System</p>
             <p className="text-sm text-muted-foreground mt-1">
-              All system actions are recorded for security and compliance. Logs are immutable and cannot be modified or deleted.
+              All system actions are recorded for security and compliance. Owners can clear logs when needed.
             </p>
           </div>
         </div>
