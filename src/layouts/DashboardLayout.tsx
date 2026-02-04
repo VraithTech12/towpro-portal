@@ -9,7 +9,7 @@ const DashboardLayout = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <div className="w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
@@ -21,9 +21,9 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <div className="ml-16">
+      <div className="lg:ml-64 ml-16 transition-all duration-300">
         <Header />
-        <main className="p-6">
+        <main className="p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

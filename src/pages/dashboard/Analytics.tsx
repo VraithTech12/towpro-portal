@@ -80,8 +80,8 @@ const Analytics = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Operations Analytics</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="text-2xl font-bold text-foreground">Operations Analytics</h1>
+          <p className="text-muted-foreground">
             {isOwner ? 'Executive overview and performance metrics' : 'Team performance metrics'}
           </p>
         </div>
@@ -90,7 +90,7 @@ const Analytics = () => {
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value as any)}
-            className="h-9 px-3 rounded-lg border border-border bg-input text-foreground text-sm"
+            className="h-10 px-4 rounded-xl border border-border bg-card text-foreground text-sm"
           >
             <option value="week">Last 7 Days</option>
             <option value="month">Last 30 Days</option>
@@ -101,18 +101,22 @@ const Analytics = () => {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-2xl p-5 hover:border-primary/50 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <FileText className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-primary" />
+            </div>
             <TrendingUp className="w-4 h-4 text-success" />
           </div>
           <p className="text-3xl font-bold text-foreground">{totalReports}</p>
           <p className="text-sm text-muted-foreground">Total Reports</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-2xl p-5 hover:border-success/50 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <CheckCircle className="w-5 h-5 text-success" />
+            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-success" />
+            </div>
           </div>
           <p className="text-3xl font-bold text-foreground">{completedReports}</p>
           <p className="text-sm text-muted-foreground">Completed</p>
@@ -121,25 +125,31 @@ const Analytics = () => {
           </p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-2xl p-5 hover:border-blue-500/50 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <Truck className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <Truck className="w-5 h-5 text-blue-400" />
+            </div>
           </div>
           <p className="text-3xl font-bold text-foreground">{civTows}</p>
           <p className="text-sm text-muted-foreground">Civilian Tows</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-2xl p-5 hover:border-amber-500/50 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <Shield className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-amber-400" />
+            </div>
           </div>
           <p className="text-3xl font-bold text-foreground">{pdTows}</p>
           <p className="text-sm text-muted-foreground">PD Tows</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-2xl p-5 hover:border-primary/50 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <Clock className="w-5 h-5 text-amber-500" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-primary" />
+            </div>
           </div>
           <p className="text-3xl font-bold text-foreground">{totalHours.toFixed(0)}h</p>
           <p className="text-sm text-muted-foreground">Total Hours</p>
@@ -148,18 +158,18 @@ const Analytics = () => {
 
       {/* Tow Type Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
             <Truck className="w-5 h-5 text-muted-foreground" />
             Tow Type Distribution
           </h2>
           <div className="space-y-4">
             <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-foreground">Civilian Tows</span>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-foreground font-medium">Civilian Tows</span>
                 <span className="text-muted-foreground">{civTows}</span>
               </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div className="h-3 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-blue-500 rounded-full transition-all"
                   style={{ width: `${totalReports > 0 ? (civTows / totalReports) * 100 : 0}%` }}
@@ -167,11 +177,11 @@ const Analytics = () => {
               </div>
             </div>
             <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-foreground">PD Tows</span>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-foreground font-medium">PD Tows</span>
                 <span className="text-muted-foreground">{pdTows}</span>
               </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div className="h-3 bg-secondary rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-amber-500 rounded-full transition-all"
                   style={{ width: `${totalReports > 0 ? (pdTows / totalReports) * 100 : 0}%` }}
@@ -181,7 +191,7 @@ const Analytics = () => {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-muted-foreground" />
             Status Overview
@@ -195,19 +205,19 @@ const Analytics = () => {
               { status: 'Completed', count: completedReports, color: 'bg-success' },
             ].map((item) => (
               <div key={item.status} className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                <span className="text-sm text-foreground flex-1">{item.status}</span>
-                <span className="text-sm font-medium text-foreground">{item.count}</span>
+                <div className={`w-3.5 h-3.5 rounded-full ${item.color}`} />
+                <span className="text-sm text-foreground flex-1 font-medium">{item.status}</span>
+                <span className="text-sm font-bold text-foreground">{item.count}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Employee List */}
-        <div className="col-span-1 bg-card border border-border rounded-xl overflow-hidden">
-          <div className="p-4 border-b border-border">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <div className="p-5 border-b border-border">
             <h2 className="font-semibold text-foreground mb-3">Staff Performance</h2>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -216,14 +226,14 @@ const Analytics = () => {
                 placeholder="Search staff..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-10 h-10"
               />
             </div>
           </div>
-          <div className="max-h-[400px] overflow-y-auto">
+          <div className="max-h-[450px] overflow-y-auto">
             {filteredEmployees.length === 0 ? (
               <div className="p-8 text-center">
-                <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground">No staff members yet</p>
               </div>
             ) : (
@@ -239,21 +249,21 @@ const Analytics = () => {
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-primary font-semibold">
+                        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <span className="text-primary font-bold">
                             {employee.name.charAt(0)}
                           </span>
                         </div>
                         {stats.isClockedIn && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-card" />
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success rounded-full border-2 border-card" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">{employee.name}</p>
+                        <p className="font-semibold text-foreground truncate">{employee.name}</p>
                         <p className="text-xs text-muted-foreground">{stats.totalReports} reports</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-foreground">{stats.totalHours.toFixed(1)}h</p>
+                        <p className="text-sm font-bold text-foreground">{stats.totalHours.toFixed(1)}h</p>
                         <p className="text-xs text-muted-foreground">Total</p>
                       </div>
                     </div>
@@ -265,19 +275,19 @@ const Analytics = () => {
         </div>
 
         {/* Employee Details */}
-        <div className="col-span-2 bg-card border border-border rounded-xl overflow-hidden">
+        <div className="lg:col-span-2 bg-card border border-border rounded-2xl overflow-hidden">
           {selectedEmployee && selectedStats ? (
             <>
               <div className="p-6 border-b border-border">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                       <span className="text-primary font-bold text-2xl">
                         {selectedEmployee.name.charAt(0)}
                       </span>
                     </div>
                     {selectedStats.isClockedIn && (
-                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-success rounded-full border-2 border-card" />
+                      <div className="absolute bottom-0 right-0 w-5 h-5 bg-success rounded-full border-2 border-card" />
                     )}
                   </div>
                   <div>
@@ -286,11 +296,11 @@ const Analytics = () => {
                   </div>
                   <div className="ml-auto">
                     {selectedStats.isClockedIn ? (
-                      <span className="px-3 py-1 rounded-full bg-success/10 text-success text-sm font-medium">
+                      <span className="px-4 py-2 rounded-xl bg-success/10 text-success text-sm font-semibold">
                         On Duty
                       </span>
                     ) : (
-                      <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm font-medium">
+                      <span className="px-4 py-2 rounded-xl bg-muted text-muted-foreground text-sm font-semibold">
                         Off Duty
                       </span>
                     )}
