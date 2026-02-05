@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Plus, Search, FileText, Trash2, MapPin, Phone, User, Calendar, StickyNote, Shield, UserPlus, Car, Navigation, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import TowStatusBadge, { TowStatus } from '@/components/dashboard/TowStatusBadge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Reports = () => {
   const { user, role } = useAuth();
@@ -19,6 +20,7 @@ const Reports = () => {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [assignedWorkerName, setAssignedWorkerName] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchAssignedWorkerName = async () => {
@@ -156,7 +158,7 @@ const Reports = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className={`grid gap-3 ${isMobile ? 'grid-cols-3' : 'grid-cols-5'}`}>
         {['open', 'assigned', 'en_route', 'in_progress', 'completed'].map((status) => {
           const count = reports.filter(r => r.status === status).length;
           return (

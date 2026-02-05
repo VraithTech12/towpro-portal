@@ -32,10 +32,10 @@ const NewReport = () => {
   });
 
   const reportTypes = [
-    { value: 'tow', label: 'Civilian Tow', icon: Car, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' },
-    { value: 'roadside', label: 'Roadside', icon: Car, color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/30' },
-    { value: 'impound', label: 'Impound', icon: Car, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' },
     { value: 'pd_tow', label: 'PD Tow', icon: Shield, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' },
+    { value: 'tow', label: 'Civilian', icon: Car, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' },
+    { value: 'impound', label: 'Impound', icon: Car, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' },
+    { value: 'roadside', label: 'Roadside Assist', icon: Car, color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/30' },
   ];
 
   const vehicleColors = [
