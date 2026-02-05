@@ -10,6 +10,7 @@ import { Plus, Search, Phone, Shield, Edit, Trash2, Loader2 } from 'lucide-react
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface StaffMemberEdit {
   user_id: string;
@@ -33,6 +34,7 @@ const Employees = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffMemberEdit | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirm>({ isOpen: false, userId: '', name: '' });
+  const isMobile = useIsMobile();
   
   // Add form state
   const [formData, setFormData] = useState({
@@ -299,7 +301,7 @@ const Employees = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
         <div className="glass-card rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-foreground">{staff.length}</p>
           <p className="text-sm text-muted-foreground">Total Staff</p>

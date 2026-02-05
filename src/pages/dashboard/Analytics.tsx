@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Analytics = () => {
   const { role, staff, clockRecords } = useAuth();
@@ -23,6 +24,7 @@ const Analytics = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'all'>('week');
+  const isMobile = useIsMobile();
 
   const isOwner = role === 'owner';
   const employees = staff.filter(s => s.role === 'employee' || s.role === 'admin');
@@ -100,7 +102,7 @@ const Analytics = () => {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-5'}`}>
         <div className="bg-card border border-border rounded-2xl p-5 hover:border-primary/50 transition-all">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -157,7 +159,7 @@ const Analytics = () => {
       </div>
 
       {/* Tow Type Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
         <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
             <Truck className="w-5 h-5 text-muted-foreground" />
@@ -200,7 +202,6 @@ const Analytics = () => {
             {[
               { status: 'Open', count: reports.filter(r => r.status === 'open').length, color: 'bg-primary' },
               { status: 'Assigned', count: reports.filter(r => r.status === 'assigned').length, color: 'bg-blue-500' },
-              { status: 'En Route', count: reports.filter(r => r.status === 'en_route').length, color: 'bg-amber-500' },
               { status: 'In Progress', count: reports.filter(r => r.status === 'in_progress').length, color: 'bg-purple-500' },
               { status: 'Completed', count: completedReports, color: 'bg-success' },
             ].map((item) => (
@@ -214,7 +215,7 @@ const Analytics = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
         {/* Employee List */}
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="p-5 border-b border-border">

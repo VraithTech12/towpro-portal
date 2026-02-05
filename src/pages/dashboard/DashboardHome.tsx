@@ -6,11 +6,13 @@ import { Link } from 'react-router-dom';
 import { Plus, FileText, Truck, ArrowRight, Users, Wifi, AlertCircle, Navigation, CheckCircle, Clock } from 'lucide-react';
 import ClockStatusCard from '@/components/dashboard/ClockStatusCard';
 import TowStatusBadge from '@/components/dashboard/TowStatusBadge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DashboardHome = () => {
   const { profile, role, staff, user } = useAuth();
   const { reports, towUnits, updateReport } = useData();
   const { onlineCount } = useOnlinePresence();
+  const isMobile = useIsMobile();
 
   const openReports = reports.filter(r => r.status === 'open').length;
   const assignedReports = reports.filter(r => r.status === 'assigned').length;
@@ -98,7 +100,7 @@ const DashboardHome = () => {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-5'}`}>
         <div className="bg-card border border-border rounded-2xl p-5 hover:border-primary/50 hover:shadow-lg transition-all group">
           <div className="flex items-center justify-between mb-4">
             <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -157,7 +159,7 @@ const DashboardHome = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
         <Link 
           to="/dashboard/reports"
           className="bg-card border border-border rounded-2xl p-6 hover:border-primary/50 transition-all hover:shadow-xl group"

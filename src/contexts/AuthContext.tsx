@@ -23,7 +23,7 @@ export interface ClockRecord {
   date: string;
 }
 
-interface StaffMember {
+export interface StaffMember {
   user_id: string;
   name: string;
   username: string;
